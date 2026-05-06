@@ -23,18 +23,39 @@ void FreeImgAnim(IMG_Anim* img_a){
     }
 }
 
+u8* loadOgg(const char* path, s32 *sizeOut)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f) return NULL;
+
+    fseek(f, 0, SEEK_END);
+    int size = ftell(f);
+    rewind(f);
+
+    u8 *buf = (u8*)memalign(32, size);
+    if (!buf) {
+        fclose(f);
+        return NULL;
+    }
+
+    fread(buf, 1, size, f);
+    fclose(f);
+
+    *sizeOut = size;
+    return buf;
+}
+
 int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
     WPAD_Init();
+    ASND_Init();
+    MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    if(DEBUG){
-        gameSceneMain();
-    }
-    else{
-        warningSceneMain();
-    }
+    //gameSceneMain();
+    //warningSceneMain();
+    menuSceneMain();
     GRRLIB_Exit();
     return 0;
 }

@@ -23,7 +23,6 @@ void createCursor(GRRLIB_texImg* img, u8 *cursor_f, u64 *frame){
     const u64 toggleRate = 12;
 
     bool visible = ((*frame / toggleRate) % 2) == 0;
-
     if(visible){
         if(*cursor_f == 0){
             GRRLIB_DrawImg(33, 282, img, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -187,7 +186,14 @@ int menuSceneMain(){
     u8 altA = 0;
     u8 altB = 0;
     u8 cursor_f = 0;
+    bool pastCursor = false;
     bool isQuitting = false;
+
+    int titlemusic_f;
+    u8 *titlemusic = loadOgg("sd:/fnaf3/assets/sounds/titlemusic.ogg", &titlemusic_f);
+    int select_f;
+    u8 *select = loadOgg("sd:/fnaf3/assets/sounds/select.ogg", &select_f);
+    PlayOgg(titlemusic, titlemusic_f, 0, OGG_INFINITE_TIME);
     srand(time(NULL));
     while(1){
         WPAD_ScanPads();
@@ -216,6 +222,10 @@ int menuSceneMain(){
             break;
         }
         createCursor(cursor, &cursor_f, &frame);
+        if(cursor_f != pastCursor){
+            //PlayOgg(select, select_f, 0, OGG_ONE_TIME, 1);
+            pastCursor = cursor_f;
+        }
         createScottCredit(scott_credits);
         createBlipFlash(&blipflash_spr, &blipflash_altA, &blipflash_f, &frame);
         createStatic(&static_spr, &static_f);
@@ -247,6 +257,7 @@ int menuSceneMain(){
     FreeImgAnim(&green_line9.green_lines);
     FreeImgAnim(&green_line10.green_lines);
     FreeImgAnim(&green_line11.green_lines);
+    StopOgg();
     if(!isQuitting){
         if(cursor_f == 0){
             adSceneMain();
