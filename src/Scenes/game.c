@@ -3,7 +3,6 @@
 #define H_PAN_W 130
 #define L_PAN_SPEED 6
 #define H_PAN_SPEED 8
-#define DEBUG false
 
 void drawCursor(GRRLIB_texImg *img, ir_t *ir){
     GRRLIB_DrawImg(ir->x, ir->y, img, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
