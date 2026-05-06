@@ -1,7 +1,8 @@
 #pragma once
 
-#define IMG_SCALE 0.625
+#define IMG_SCALE 1
 #define MAX_FRAMES 20
+#define NIGHT 1
 
 #define WARNING_IMG "sd:/fnaf3/assets/images/329.png"
 #include <stdio.h>
@@ -15,8 +16,12 @@
 #include <grrlib.h>
 #include <wiiuse/wpad.h>
 #include <string.h>
+
 #include "warningScene.h"
 #include "menu.h"
+#include "ad.h"
+#include "curr_night.h"
+#include "game.h"
 
 u8 imgCheck(GRRLIB_texImg* img);
 float CenterX(GRRLIB_texImg *img);

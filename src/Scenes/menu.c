@@ -133,6 +133,8 @@ GreenLine_t createGreenLineObj(){
 
 int menuSceneMain(){
     u64 frame = 0;
+    GRRLIB_FillScreen(0x000000FF);
+    GRRLIB_Render();
     IMG_Anim static_spr = {0};
     static_spr.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/291.png"); // static
     static_spr.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/292.png");
@@ -185,6 +187,7 @@ int menuSceneMain(){
     u8 altA = 0;
     u8 altB = 0;
     u8 cursor_f = 0;
+    bool isQuitting = false;
     srand(time(NULL));
     while(1){
         WPAD_ScanPads();
@@ -208,6 +211,10 @@ int menuSceneMain(){
         if(mote & WPAD_BUTTON_DOWN || mote & WPAD_BUTTON_UP){
             cursor_f = !cursor_f;
         }
+        if(mote & WPAD_BUTTON_A){
+            isQuitting = false;
+            break;
+        }
         createCursor(cursor, &cursor_f, &frame);
         createScottCredit(scott_credits);
         createBlipFlash(&blipflash_spr, &blipflash_altA, &blipflash_f, &frame);
@@ -216,6 +223,7 @@ int menuSceneMain(){
         frame++;
         GRRLIB_Render();
         if(mote & WPAD_BUTTON_HOME){
+            isQuitting = true;
             break;
         }
     };
@@ -239,5 +247,13 @@ int menuSceneMain(){
     FreeImgAnim(&green_line9.green_lines);
     FreeImgAnim(&green_line10.green_lines);
     FreeImgAnim(&green_line11.green_lines);
+    if(!isQuitting){
+        if(cursor_f == 0){
+            adSceneMain();
+        }
+        else{
+            curr_nightSceneMain();
+        }
+    }
     return 0;
 }

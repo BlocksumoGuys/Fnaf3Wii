@@ -27,7 +27,11 @@ int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
     WPAD_Init();
-    warningSceneMain();
+    GRRLIB_FillScreen(0x000000FF);
+    GRRLIB_Render();
+    gameSceneMain();
+    //menuSceneMain();
+    //warningSceneMain();
     GRRLIB_Exit();
     return 0;
 }

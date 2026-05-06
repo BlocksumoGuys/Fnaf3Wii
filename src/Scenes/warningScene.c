@@ -1,5 +1,7 @@
 #include "main.h"
 
+#define FADE_OUT_T
+
 int warningSceneMain(){
     GRRLIB_texImg *img = GRRLIB_LoadTextureFromFile(WARNING_IMG);
     u8 alpha = 0;
