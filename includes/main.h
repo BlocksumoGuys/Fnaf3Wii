@@ -23,6 +23,9 @@
 #include "curr_night.h"
 #include "game.h"
 
+#include "font_png.h"
+#include "pointer_png.h"
+
 u8 imgCheck(GRRLIB_texImg* img);
 float CenterX(GRRLIB_texImg *img);
 float CenterY(GRRLIB_texImg *img);
