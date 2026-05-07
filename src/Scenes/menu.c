@@ -1,5 +1,7 @@
 #include "main.h"
 
+IMG_Anim green_lines = {0};
+
 void createStatic(IMG_Anim *static_spr, u8 *static_f){
     if(static_spr->frames[*static_f]){
         GRRLIB_DrawImg(CenterX(static_spr->frames[*static_f]), CenterY(static_spr->frames[*static_f]), static_spr->frames[*static_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + ((rand() % 50)));
@@ -51,7 +53,7 @@ void createGreenLines(IMG_Anim *img, u8 *counter, u8 *random, u64 *frame, s32 x,
     if(*frame%60==0){
         *random = (rand() % 10) + 2;
     }
-    GRRLIB_DrawImg(x, y, img->frames[*counter], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(x, y, green_lines.frames[*counter], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     if(*frame%(*random * 10) == 0){
         *counter = (*counter+1) % 16;
     }
@@ -104,28 +106,11 @@ typedef struct
 {
     u8 random;
     u8 counter;
-    IMG_Anim green_lines;
 }GreenLine_t;
 
 GreenLine_t createGreenLineObj(){
     GreenLine_t gl = {0};
     gl.random = 60;
-    gl.green_lines.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1028.png");
-    gl.green_lines.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1029.png");
-    gl.green_lines.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1030.png");
-    gl.green_lines.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1031.png");
-    gl.green_lines.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1032.png");
-    gl.green_lines.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1033.png");
-    gl.green_lines.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1034.png");
-    gl.green_lines.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1035.png");
-    gl.green_lines.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1036.png");
-    gl.green_lines.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1037.png");
-    gl.green_lines.frames[10] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1038.png");
-    gl.green_lines.frames[11] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1039.png");
-    gl.green_lines.frames[12] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1040.png");
-    gl.green_lines.frames[13] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1041.png");
-    gl.green_lines.frames[14] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1042.png");
-    gl.green_lines.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1043.png");
     return gl;
 }
 
@@ -165,7 +150,24 @@ int menuSceneMain(){
     GRRLIB_texImg *greenScanBar = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1126.png"); // big green scan bar
     s32 greenScanBarY = -20;
 
-    GreenLine_t green_line1 = createGreenLineObj(); // small green line
+    green_lines.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1028.png");
+    green_lines.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1029.png");
+    green_lines.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1030.png");
+    green_lines.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1031.png");
+    green_lines.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1032.png");
+    green_lines.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1033.png");
+    green_lines.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1034.png");
+    green_lines.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1035.png");
+    green_lines.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1036.png");
+    green_lines.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1037.png");
+    green_lines.frames[10] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1038.png");
+    green_lines.frames[11] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1039.png");
+    green_lines.frames[12] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1040.png");
+    green_lines.frames[13] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1041.png");
+    green_lines.frames[14] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1042.png");
+    green_lines.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1043.png");
+
+    GreenLine_t green_line1 = createGreenLineObj();
     GreenLine_t green_line2 = createGreenLineObj();
     GreenLine_t green_line3 = createGreenLineObj();
     GreenLine_t green_line4 = createGreenLineObj();
@@ -175,7 +177,7 @@ int menuSceneMain(){
     GreenLine_t green_line8 = createGreenLineObj();
     GreenLine_t green_line9 = createGreenLineObj();
     GreenLine_t green_line10 = createGreenLineObj();
-    GreenLine_t green_line11 = createGreenLineObj(); // small green line
+    GreenLine_t green_line11 = createGreenLineObj();
 
     GRRLIB_texImg *title = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/155.png");
     GRRLIB_texImg *new_game = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/592.png");
@@ -188,28 +190,22 @@ int menuSceneMain(){
     u8 cursor_f = 0;
     bool pastCursor = false;
     bool isQuitting = false;
-
-    int titlemusic_f;
-    u8 *titlemusic = loadOgg("sd:/fnaf3/assets/sounds/titlemusic.ogg", &titlemusic_f);
-    int select_f;
-    u8 *select = loadOgg("sd:/fnaf3/assets/sounds/select.ogg", &select_f);
-    PlayOgg(titlemusic, titlemusic_f, 0, OGG_INFINITE_TIME);
     srand(time(NULL));
     while(1){
         WPAD_ScanPads();
         u32 mote = WPAD_ButtonsDown(0);
         createSpringTrap(&springtrap_spr, &springtrap_f, &frame, &altA, &altB);
-        createGreenLines(&green_line1.green_lines, &green_line1.counter, &green_line1.random, &frame, 0, 50);
-        createGreenLines(&green_line2.green_lines, &green_line2.counter, &green_line2.random, &frame, 0, 80);
-        createGreenLines(&green_line3.green_lines, &green_line3.counter, &green_line3.random, &frame, 0, 130);
-        createGreenLines(&green_line4.green_lines, &green_line4.counter, &green_line4.random, &frame, 0, 160);
-        createGreenLines(&green_line5.green_lines, &green_line5.counter, &green_line5.random, &frame, 0, 190);
-        createGreenLines(&green_line6.green_lines, &green_line6.counter, &green_line6.random, &frame, 0, 282);
-        createGreenLines(&green_line7.green_lines, &green_line7.counter, &green_line7.random, &frame, 0, 327);
-        createGreenLines(&green_line8.green_lines, &green_line8.counter, &green_line8.random, &frame, 0, 361);
-        createGreenLines(&green_line9.green_lines, &green_line9.counter, &green_line9.random, &frame, 0, 413);
-        createGreenLines(&green_line10.green_lines, &green_line10.counter, &green_line10.random, &frame, 300, 441);
-        createGreenLines(&green_line11.green_lines, &green_line11.counter, &green_line11.random, &frame, 300, 462);
+        createGreenLines(&green_lines, &green_line1.counter, &green_line1.random, &frame, 0, 50);
+        createGreenLines(&green_lines, &green_line2.counter, &green_line2.random, &frame, 0, 80);
+        createGreenLines(&green_lines, &green_line3.counter, &green_line3.random, &frame, 0, 130);
+        createGreenLines(&green_lines, &green_line4.counter, &green_line4.random, &frame, 0, 160);
+        createGreenLines(&green_lines, &green_line5.counter, &green_line5.random, &frame, 0, 190);
+        createGreenLines(&green_lines, &green_line6.counter, &green_line6.random, &frame, 0, 282);
+        createGreenLines(&green_lines, &green_line7.counter, &green_line7.random, &frame, 0, 327);
+        createGreenLines(&green_lines, &green_line8.counter, &green_line8.random, &frame, 0, 361);
+        createGreenLines(&green_lines, &green_line9.counter, &green_line9.random, &frame, 0, 413);
+        createGreenLines(&green_lines, &green_line10.counter, &green_line10.random, &frame, 300, 441);
+        createGreenLines(&green_lines, &green_line11.counter, &green_line11.random, &frame, 300, 462);
         createTitle(title);
         createNewGame(new_game);
         createLoadGame(load_game);
@@ -223,8 +219,7 @@ int menuSceneMain(){
         }
         createCursor(cursor, &cursor_f, &frame);
         if(cursor_f != pastCursor){
-            //PlayOgg(select, select_f, 0, OGG_ONE_TIME, 1);
-            pastCursor = cursor_f;
+            pastCursor = cursor_f; // for future audio
         }
         createScottCredit(scott_credits);
         createBlipFlash(&blipflash_spr, &blipflash_altA, &blipflash_f, &frame);
@@ -246,18 +241,7 @@ int menuSceneMain(){
     FreeImgAnim(&blipflash_spr);
     FreeImgAnim(&static_spr);
     FreeImgAnim(&springtrap_spr);
-    FreeImgAnim(&green_line1.green_lines);
-    FreeImgAnim(&green_line2.green_lines);
-    FreeImgAnim(&green_line3.green_lines);
-    FreeImgAnim(&green_line4.green_lines);
-    FreeImgAnim(&green_line5.green_lines);
-    FreeImgAnim(&green_line6.green_lines);
-    FreeImgAnim(&green_line7.green_lines);
-    FreeImgAnim(&green_line8.green_lines);
-    FreeImgAnim(&green_line9.green_lines);
-    FreeImgAnim(&green_line10.green_lines);
-    FreeImgAnim(&green_line11.green_lines);
-    StopOgg();
+    FreeImgAnim(&green_lines);
     if(!isQuitting){
         if(cursor_f == 0){
             adSceneMain();

@@ -18,7 +18,6 @@
 #include <wiiuse/wpad.h>
 #include <asndlib.h>
 #include <mp3player.h>
-#include "oggplayer.h"
 #include <string.h>
 
 #include "warningScene.h"
@@ -29,7 +28,6 @@
 
 #include "font_png.h"
 #include "pointer_png.h"
-
 
 u8 imgCheck(GRRLIB_texImg* img);
 float CenterX(GRRLIB_texImg *img);
