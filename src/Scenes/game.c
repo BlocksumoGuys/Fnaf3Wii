@@ -15,10 +15,26 @@ bool canPanelButtonBeClicked = true;
 bool canPan = true;
 u8 panelSelect = 0;
 float IR_Y;
+u8 time_am = 12;
 
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
+}
+
+void drawNightInf(IMG_Anim *img){
+    GRRLIB_DrawImg(570, 20, img->frames[7], 0, IMG_SCALE + .4, IMG_SCALE + .4, 0xFFFFFFFF);
+    GRRLIB_DrawImg(570+50, 20-2.5, img->frames[NIGHT], 0, .6, .6, 0xFFFFFFFF);
+    u16 tx = 590;
+    u16 ty = 35;
+    GRRLIB_DrawImg(612, ty + 5, img->frames[8], 0, IMG_SCALE + .4, IMG_SCALE + .4, 0xFFFFFFFF);
+    if(time_am!=12){
+        GRRLIB_DrawImg(tx, ty, img->frames[time_am], 0, .6, .6, 0xFFFFFFFF);
+    }
+    else{
+        GRRLIB_DrawImg(tx, ty, img->frames[1], 0, .6, .6, 0xFFFFFFFF);
+        GRRLIB_DrawImg(tx + (img->frames[1]->w/2), ty, img->frames[2], 0, .6, .6, 0xFFFFFFFF);        
+    }
 }
 
 void drawCursor(GRRLIB_texImg *img){
@@ -133,6 +149,7 @@ void drawPanelText(IMG_Anim *img){
         GRRLIB_DrawImg(66-img->frames[6]->w + x_pad, 404 + y_pad, img->frames[6], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     default:
+        GRRLIB_DrawImg(66-img->frames[6]->w + x_pad, 235 + y_pad, img->frames[6], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     }
 }
@@ -143,16 +160,16 @@ int gameSceneMain(){
     GRRLIB_Render();
     u64 frame = 0;
     IMG_Anim office = {0};
-    office.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(1).png");
-    office.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(2).png");
-    office.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/204(1).png");
-    office.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/204(2).png");
+    office.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(1).png"); // normal 1
+    office.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(2).png"); // normal 2
+    office.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/204(1).png"); // alarm 1
+    office.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/204(2).png"); // alarm 2
     IMG_Anim fan = {0};
     fan.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/18.png");
     fan.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/19.png");
     fan.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/20.png");
     u8 fan_f = 0;
-    IMG_Anim controlPanel = {0};
+    IMG_Anim controlPanel = {0}; // the physical panel
     controlPanel.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/744.png");
     controlPanel.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/743.png");
     controlPanel.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/742.png");
@@ -165,14 +182,25 @@ int gameSceneMain(){
     controlPanel.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/735.png");
     controlPanel.frames[10] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/734.png");
     u8 controlPanel_f = 0;
-    IMG_Anim PanelCommands = {0};
-    PanelCommands.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/599.png");
-    PanelCommands.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/544.png");
-    PanelCommands.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/545.png");
-    PanelCommands.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/555.png");
-    PanelCommands.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/594.png");
-    PanelCommands.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/600.png");
-    PanelCommands.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/596.png");
+    IMG_Anim PanelCommands = {0}; // the commands
+    PanelCommands.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/599.png"); // "system restart menu"
+    PanelCommands.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/544.png"); // "audio devices"
+    PanelCommands.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/545.png"); // "camera system"
+    PanelCommands.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/555.png"); // "ventilation"
+    PanelCommands.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/594.png"); // "reboot all"
+    PanelCommands.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/600.png"); // "exit"
+    PanelCommands.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/596.png"); // green select cursor
+    IMG_Anim NightTimeFont = {0};
+    NightTimeFont.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/746.png"); // 0
+    NightTimeFont.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/747.png"); // 1
+    NightTimeFont.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/748.png"); // 2
+    NightTimeFont.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/749.png"); // 3
+    NightTimeFont.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/750.png"); // 4
+    NightTimeFont.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/751.png"); // 5
+    NightTimeFont.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/752.png"); // 6
+    NightTimeFont.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/245.png"); // "night" text
+    NightTimeFont.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/246.png"); // "am" text
+    
     GRRLIB_texImg *cursor = GRRLIB_LoadTexture(pointer_png);
     GRRLIB_texImg *font = GRRLIB_LoadTexture(font_png);
     GRRLIB_texImg *panelClick = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/77.png");
@@ -189,14 +217,13 @@ int gameSceneMain(){
         drawFan(&fan, &fan_f, &frame);   
         drawPanelButton(panelClick);
         drawControlPanel(&controlPanel, &controlPanel_f, &frame);
-        sprintf(buffer, "%d", panelSelect);
+        sprintf(buffer, "%lld", frame);
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
         if(DEBUG){
             sprintf(buffer, "X: %d \n mX: %.1f, mY: %.1f", x, ir.x, IR_Y);
             GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
         }
         if(mote & WPAD_BUTTON_A){
-            panelSelect = (panelSelect += 1) % 5;
             if(canPanelButtonBeClicked){
                 if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){isControlPanelOpen = 1;}
             }
@@ -205,6 +232,22 @@ int gameSceneMain(){
             }
         }
         drawPanelText(&PanelCommands);
+        drawNightInf(&NightTimeFont);
+        if(NIGHT == 1){
+            if(frame%(60*40)==0){
+                if(time_am == 12){
+                    time_am = 1;
+                }else{time_am += 1;}
+            }
+        }
+        else{
+            if(frame%(60*60)==0){
+                if(time_am == 12){
+                    time_am = 1;
+                }else{time_am += 1;}
+            }
+        }
+        if(time_am == 6){break;}
         drawCursor(cursor);
         GRRLIB_Render();
         frame++;
@@ -214,5 +257,6 @@ int gameSceneMain(){
     FreeImgAnim(&fan);
     FreeImgAnim(&controlPanel);
     FreeImgAnim(&PanelCommands);
+    FreeImgAnim(&NightTimeFont);
     return 0;
 }
