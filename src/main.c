@@ -49,6 +49,7 @@ float lerp(float a, float b, float t){
     return a + (b - a) * t;
 }
 
+
 int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
@@ -57,9 +58,10 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    gameSceneMain();
-    //warningSceneMain();
+    //gameSceneMain();
+    warningSceneMain();
     //menuSceneMain();
+    //adSceneMain();
     GRRLIB_Exit();
     return 0;
 }

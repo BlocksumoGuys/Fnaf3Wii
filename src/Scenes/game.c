@@ -40,6 +40,7 @@ GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
 u8 camButton_alpha = 100;
+u8 selected_cam = 2;
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
@@ -286,22 +287,26 @@ void drawCamPanel(){
 
 void drawCamLayout(){
     if(camButton_alpha != 50) return;
-    u16 x_l[10] = {391, 525, 577, 577, 475, 387, 387, 454, 495, 562};
-    u16 y_l[10] = {407, 391, 364, 324, 333, 338, 297, 283, 257, 280};
-    GRRLIB_DrawImg(356, 222, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(420, 413, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
-    GRRLIB_DrawImg(528, 376, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(560, 370, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(560, 330, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    int y_pad = 0;
+    int x_pad = -30;
+    u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
+    u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
+    GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+    GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(560+x_pad, 330+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     // there's no fifth one
-    GRRLIB_DrawImg(414, 344, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(414, 304, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(461, 300, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(500, 270, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(547, 289, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+    GRRLIB_DrawImg(414+x_pad, 344+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(414+x_pad, 304+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(461+x_pad, 300+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(500+x_pad, 270+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(547+x_pad, 289+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
 
     for(int i = 0; i<10; i++){
-        GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(selected_cam-1 == i){
+            GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
     }
     for(int i = 0; i<10; i++){
         GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -313,6 +318,10 @@ int gameSceneMain(){
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     InitAllImg();
+    s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
+    s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
+    u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad}; // FOR CAM LAYOUT BUTTONS
+    u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad}; // FOR CAM LAYOUT BUTTONS
     char buffer[100];
     while (1)
     {
@@ -327,8 +336,8 @@ int gameSceneMain(){
         drawCamPanel();
         drawCamLayout();
         drawCamButton();
-        sprintf(buffer, "%.1f, %.1f", ir.x, IR_Y);
-        GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
+        //sprintf(buffer, "%.1f, %.1f", ir.x, IR_Y);
+        //GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
         if(DEBUG){
             sprintf(buffer, "X: %d \n mX: %.1f, mY: %.1f", x, ir.x, IR_Y);
             GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
@@ -340,10 +349,20 @@ int gameSceneMain(){
             if(!PanelButtonVisible){
                 if(panelSelect == 4){isControlPanelOpen = 2;}
             }
-            if(camButton_alpha == 100 || camButton_alpha == 50){
+            if(camButton_alpha == 100){
                 if(IsCursorWithinImg(camClick, 540, 73)){
                     isCamOpen = !isCamOpen;
                 }
+            }
+            if(camButton_alpha == 50){
+                if(IsCursorWithinImg(camClick, 540, 73)){
+                    isCamOpen = !isCamOpen;
+                }
+                for(int i = 0; i < 10; i++){
+                    if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i])){
+                        selected_cam = i + 1;
+                    }   
+                }             
             }
         }
         drawPanelText();

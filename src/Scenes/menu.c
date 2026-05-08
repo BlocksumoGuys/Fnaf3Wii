@@ -1,6 +1,14 @@
 #include "main.h"
 
 IMG_Anim green_lines = {0};
+GRRLIB_texImg *pointer = NULL;
+ir_t ir2;
+float IR2_Y;
+
+bool IsCursorWithinImg2(GRRLIB_texImg *img, int x, int y){
+    if(ir2.x >= x && ir2.x <= x + img->w && IR2_Y >= y && IR2_Y <= y + img->h){return true;}
+    return false;
+}
 
 void createStatic(IMG_Anim *static_spr, u8 *static_f){
     if(static_spr->frames[*static_f]){
@@ -114,6 +122,10 @@ GreenLine_t createGreenLineObj(){
     return gl;
 }
 
+void drawPointer(){
+    IR2_Y = ir2.y * (480.0f / 460.0f);
+    GRRLIB_DrawImg(ir2.x, IR2_Y, pointer, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+}
 
 int menuSceneMain(){
     u64 frame = 0;
@@ -185,15 +197,18 @@ int menuSceneMain(){
     GRRLIB_texImg *cursor = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/833.png");
     GRRLIB_texImg *scott_credits = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/849.png");
     GRRLIB_texImg *game_ver = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/160.png"); // original game version
+    pointer = GRRLIB_LoadTexture(pointer_png);
     u8 altA = 0;
     u8 altB = 0;
     u8 cursor_f = 0;
     bool pastCursor = false;
     bool isQuitting = false;
+    WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     srand(time(NULL));
     while(1){
         WPAD_ScanPads();
         u32 mote = WPAD_ButtonsDown(0);
+        WPAD_IR(0, &ir2);
         createSpringTrap(&springtrap_spr, &springtrap_f, &frame, &altA, &altB);
         createGreenLines(&green_lines, &green_line1.counter, &green_line1.random, &frame, 0, 50);
         createGreenLines(&green_lines, &green_line2.counter, &green_line2.random, &frame, 0, 80);
@@ -225,8 +240,11 @@ int menuSceneMain(){
         createBlipFlash(&blipflash_spr, &blipflash_altA, &blipflash_f, &frame);
         createStatic(&static_spr, &static_f);
         createGameVer(game_ver);
+        drawPointer();
         frame++;
         GRRLIB_Render();
+        if(IsCursorWithinImg2(new_game, 60, 282)){cursor_f = 0;}
+        if(IsCursorWithinImg2(new_game, 60, 327)){cursor_f = 1;}
         if(mote & WPAD_BUTTON_HOME){
             isQuitting = true;
             break;
@@ -238,6 +256,7 @@ int menuSceneMain(){
     GRRLIB_FreeTexture(cursor);
     GRRLIB_FreeTexture(scott_credits);
     GRRLIB_FreeTexture(greenScanBar);
+    GRRLIB_FreeTexture(pointer);
     FreeImgAnim(&blipflash_spr);
     FreeImgAnim(&static_spr);
     FreeImgAnim(&springtrap_spr);

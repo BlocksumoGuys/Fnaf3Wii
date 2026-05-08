@@ -1,7 +1,7 @@
 #include "main.h"
 
 int adSceneMain(){
-    u64 frame;
+    u64 frame = 0;
     //GRRLIB_FillScreen(0x000000FF);
     //GRRLIB_Render();
     GRRLIB_texImg *ad_img = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/0.png");
@@ -15,7 +15,7 @@ int adSceneMain(){
         if(alpha < 255 && isAlpha){
             alpha+=3;
         }
-        if(frame == (60*9) || (mote & WPAD_BUTTON_A)){
+        if(frame >= (60*9) || (mote & WPAD_BUTTON_A)){
             isAlpha = false;
         }
         if(!isAlpha && alpha > 0){
