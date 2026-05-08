@@ -45,6 +45,10 @@ u8* loadOgg(const char* path, s32 *sizeOut)
     return buf;
 }
 
+float lerp(float a, float b, float t){
+    return a + (b - a) * t;
+}
+
 int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
