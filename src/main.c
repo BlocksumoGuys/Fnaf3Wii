@@ -58,8 +58,8 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    gameSceneMain();
-    //warningSceneMain();
+    //gameSceneMain();
+    warningSceneMain();
     //menuSceneMain();
     //adSceneMain();
     GRRLIB_Exit();

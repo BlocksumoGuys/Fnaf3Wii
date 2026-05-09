@@ -305,7 +305,7 @@ void drawCamStatic(){
     static u8 CamStatic_f = 0;
     GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, CamStatic.frames[CamStatic_f], 0, 825.0f/1021.2f, 650.0f/768.0f, 0xFFFFFF00+CamStatic_alpha);
     CamStatic_f = (CamStatic_f+1)%3;
-    if(CamStatic_alpha>50){
+    if(CamStatic_alpha>50 && frame%2==0){
         CamStatic_alpha--;
     }
 }
@@ -392,6 +392,7 @@ int gameSceneMain(){
                 for(int i = 0; i < 10; i++){
                     if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i])){
                         selected_cam = i + 1;
+                        CamStatic_alpha = 255;
                     }   
                 }             
             }
