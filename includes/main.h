@@ -41,5 +41,3 @@ typedef struct
 }IMG_Anim;
 
 void FreeImgAnim(IMG_Anim* img_a);
-
-//const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7};

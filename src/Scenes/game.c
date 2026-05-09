@@ -41,6 +41,10 @@ GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
+const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7};
+u8 camHealth = 0;
+u8 CamErrorTimer = 0;
+bool MapLayoutNormalMode = false;
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
@@ -81,8 +85,8 @@ void InitAllImg(){
     NightTimeFont.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/752.png"); // 6
     NightTimeFont.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/245.png"); // "night" text
     NightTimeFont.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/246.png"); // "am" text
-    CamPanel.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/74.png");
-    CamPanel.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/72.png");
+    CamPanel.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/74.png"); // normal grey boxes
+    CamPanel.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/72.png"); // cam num
     CamPanel.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/71.png");
     CamPanel.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/69.png");
     CamPanel.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/68.png");
@@ -91,10 +95,12 @@ void InitAllImg(){
     CamPanel.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/61.png");
     CamPanel.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/60.png");
     CamPanel.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/59.png");
-    CamLayout.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/532.png");
-    CamLayout.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/626.png");
+    CamLayout.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/532.png"); // cam layout
+    CamLayout.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/626.png"); // vent layout
+    CamLayout.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/574.png"); // cam layout 2
+    CamLayout.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/627.png"); // vent layout 2
     CamLayoutNmb.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/81.png");
-    CamLayoutNmb.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/83.png");
+    CamLayoutNmb.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/83.png"); // ALL IS CAM NUM
     CamLayoutNmb.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/84.png");
     CamLayoutNmb.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/85.png");
     CamLayoutNmb.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/86.png");
@@ -108,8 +114,11 @@ void InitAllImg(){
     CamLayoutNmb.frames[12] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/614.png");
     CamLayoutNmb.frames[13] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/617.png");
     CamLayoutNmb.frames[14] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/619.png");
-    CamLayoutNmb.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/621.png");
-    CamLayoutNmb.frames[16] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/82.png");
+    CamLayoutNmb.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/621.png"); // cam num
+    CamLayoutNmb.frames[16] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/82.png"); // normal grey boxes but selected so its green
+    CamLayoutNmb.frames[17] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/426.png"); // big grey boxes
+    CamLayoutNmb.frames[18] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/366.png"); // play audio text
+    CamLayoutNmb.frames[19] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/431.png"); // map toggle text
     triangle.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/95.png");
     triangle.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/93.png");
     triangle.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/96.png");
@@ -291,7 +300,9 @@ void drawCamLayout(){
     int x_pad = -30;
     u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
     u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
-    GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    if(MapLayoutNormalMode == 0){
+        GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
+    }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
     GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
     GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -307,10 +318,12 @@ void drawCamLayout(){
         if(selected_cam-1 == i){
             GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
+        GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
     }
-    for(int i = 0; i<10; i++){
-        GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    }
+    GRRLIB_DrawImg(298+x_pad, 332+y_pad, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
+    GRRLIB_DrawImg(298+x_pad, 381+y_pad, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(298+x_pad + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+y_pad+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
+    GRRLIB_DrawImg(298+x_pad + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+y_pad+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2), CamLayoutNmb.frames[19], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // end big buttons
 }
 
 int gameSceneMain(){
@@ -380,6 +393,16 @@ int gameSceneMain(){
                     time_am = 1;
                 }else{time_am += 1;}
             }
+        }
+        if(camButton_alpha == 50){ // for the cam health
+            CamErrorTimer++;
+            if(CamErrorTimer >= (60*12)){ // each 12 seconds, springtrap's AI level is deducted from the cam's health
+                camHealth -= Springtrap_AI[NIGHT - 1];
+                CamErrorTimer = 0;
+            }
+        }
+        if(frame%60==0){ //global each second timer
+            MapLayoutNormalMode = !MapLayoutNormalMode;
         }
         if(time_am == 6){break;}
         drawCursor();
