@@ -31,10 +31,12 @@ IMG_Anim NightTimeFont = {0};
 IMG_Anim CamPanel = {0};
 IMG_Anim triangle = {0};
 u8 CamPanel_f = 0;
-u8 CamPanel_alpha = 255;
+u8 CamPanel_alpha = 50;
 IMG_Anim CamLayout = {0};
 u8 CamLayout_f = 0;
 IMG_Anim CamLayoutNmb = {0};
+IMG_Anim CamStatic = {0};
+u8 CamStatic_alpha = 100;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -123,6 +125,9 @@ void InitAllImg(){
     triangle.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/93.png");
     triangle.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/96.png");
     triangle.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/94.png");
+    CamStatic.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/291.png");
+    CamStatic.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/292.png");
+    CamStatic.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/33.png");
     cursor = GRRLIB_LoadTexture(pointer_png);
     font = GRRLIB_LoadTexture(font_png);
     panelClick = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/77.png");
@@ -268,6 +273,7 @@ void drawPanelText(){
 
 void drawCamButton(){
     if(fabs(x + HALF_REGION) > 1.0f) return;
+    if(frame)
     GRRLIB_DrawImg(540, 73, camClick, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + camButton_alpha);
 }
 
@@ -294,8 +300,19 @@ void drawCamPanel(){
     }
 }
 
+void drawCamStatic(){
+    if(camButton_alpha!=50) return;
+    static u8 CamStatic_f = 0;
+    GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, CamStatic.frames[CamStatic_f], 0, 825.0f/1021.2f, 650.0f/768.0f, 0xFFFFFF00+CamStatic_alpha);
+    CamStatic_f = (CamStatic_f+1)%3;
+    if(CamStatic_alpha>50){
+        CamStatic_alpha--;
+    }
+}
+
 void drawCamLayout(){
     if(camButton_alpha != 50) return;
+    drawCamStatic();
     int y_pad = 0;
     int x_pad = -30;
     u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
@@ -336,6 +353,7 @@ int gameSceneMain(){
     u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad}; // FOR CAM LAYOUT BUTTONS
     u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad}; // FOR CAM LAYOUT BUTTONS
     char buffer[100];
+    u8 CamStaticRandom = (rand()%15) + 1;
     while (1)
     {
         WPAD_ScanPads();
@@ -404,6 +422,10 @@ int gameSceneMain(){
         if(frame%60==0){ //global each second timer
             MapLayoutNormalMode = !MapLayoutNormalMode;
         }
+        if(frame%60*CamStaticRandom==0){
+            CamStatic_alpha = (rand()%255) + 51;
+            CamStaticRandom = (rand()%15) + 1;
+        }
         if(time_am == 6){break;}
         drawCursor();
         GRRLIB_Render();
@@ -420,5 +442,6 @@ int gameSceneMain(){
     FreeImgAnim(&CamLayout);
     FreeImgAnim(&CamLayoutNmb);
     FreeImgAnim(&triangle);
+    FreeImgAnim(&CamStatic);
     return 0;
 }
