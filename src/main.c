@@ -23,7 +23,7 @@ void FreeImgAnim(IMG_Anim* img_a){
     }
 }
 
-u8* loadOgg(const char* path, s32 *sizeOut)
+u8* loadBuf(const char* path, s32 *sizeOut)
 {
     FILE *f = fopen(path, "rb");
     if (!f) return NULL;
@@ -50,8 +50,6 @@ int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
     WPAD_Init();
-    ASND_Init();
-    MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     gameSceneMain();

@@ -59,7 +59,7 @@ void DrawWarpedScene(){
     for(int sx = 0; sx < SCREEN_W; sx += STRIP_W){
         float u = (float)sx / SCREEN_W;
         float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
-        float scaleY = 1.0f + dist * 0.2f;
+        float scaleY = 1.0f + dist * 0.2f; // for intensity
         float h = SCREEN_H * scaleY;
         float y = (SCREEN_H - h) * 0.5f;
         GRRLIB_DrawPart(sx, y, sx, 0, STRIP_W, SCREEN_H, sceneTex, 0, 1.0f, scaleY, 0xFFFFFFFF);
@@ -436,7 +436,7 @@ int gameSceneMain(){
             MapLayoutNormalMode = !MapLayoutNormalMode;
         }
         if(frame%60*CamStaticRandom==0){
-            CamStatic_alpha = (rand()%255) + 51;
+            CamStatic_alpha = (rand()%50) + 51;
             CamStaticRandom = (rand()%15) + 1;
         }
         if(time_am == 6){break;}
