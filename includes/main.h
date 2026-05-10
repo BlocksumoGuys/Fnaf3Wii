@@ -33,7 +33,6 @@ u8 imgCheck(GRRLIB_texImg* img);
 float CenterX(GRRLIB_texImg *img);
 float CenterY(GRRLIB_texImg *img);
 u8* loadOgg(const char* path, s32 *sizeOut);
-float lerp(float a, float b, float t);
 
 typedef struct
 {

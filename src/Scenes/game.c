@@ -1,7 +1,7 @@
 #include "main.h"
 #define L_PAN_W 214
 #define H_PAN_W 130
-#define PAN_SPEED 8
+#define PAN_SPEED 12
 #define HALF_REGION 624
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -41,6 +41,7 @@ GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
+GRRLIB_texImg *sceneTex = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7};
@@ -51,6 +52,50 @@ bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
 }
+
+void DrawWarpedScene(){
+    int stripW = 4;
+
+    for(int sx = 0; sx < SCREEN_W; sx += stripW){
+
+        float u = (float)sx / SCREEN_W;
+
+        float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
+
+        float scaleY = 1.0f + dist * 0.5f;
+
+        float h = SCREEN_H * scaleY;
+
+        float y = (SCREEN_H - h) * 0.5f;
+
+        GRRLIB_DrawPart(
+            sx,
+            y,
+            sx,
+            0,
+            stripW,
+            SCREEN_H,
+            sceneTex,
+            0,
+            1.0f,
+            scaleY,
+            0xFFFFFFFF
+        );
+    }
+}
+
+ /*  int stripW = 4;
+    for(int sx = 0; sx < SCREEN_W; sx += stripW){
+        float u = (float)sx / SCREEN_W;
+        float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
+        float scaleY = 1.0f + dist * 0.5f;
+        float worldX = -x + sx;
+        GRRLIB_texImg *tex = (worldX < office.frames[0]->w) ? office.frames[0] : office.frames[1];
+        float localX = (worldX < office.frames[0]->w) ? worldX : worldX - office.frames[0]->w;
+        float h = SCREEN_H * scaleY;
+        float y = (SCREEN_H - h) * 0.5f;
+        GRRLIB_DrawPart(sx, y, localX, 0, stripW, tex->h, tex, 0, IMG_SCALE, IMG_SCALE * scaleY, 0xFFFFFFFF);
+    } */
 
 void InitAllImg(){
     office.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(1).png"); // normal 1
@@ -202,7 +247,7 @@ void drawPanelButton(){
 
 void drawOffice(){
     GRRLIB_DrawImg(x, 0, office.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(x+ (office.frames[1]->w), 0, office.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(x+(office.frames[1]->w), 0, office.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     if(DEBUG){
         GRRLIB_Rectangle(0, 0, L_PAN_W, 480, 0xFF00FFFF, true); // light left pan
         GRRLIB_Rectangle(640 - L_PAN_W, 0, L_PAN_W, 480, 0xFF00FFFF, true); // ligth right pan
@@ -211,26 +256,25 @@ void drawOffice(){
     }
     // size of pans: 160x480
     if(!canPan) return;
-    if(tx < 0 && ir.x <= L_PAN_W){
-        tx+=PAN_SPEED;
+    if(x < 0 && ir.x <= L_PAN_W){
+        x+=PAN_SPEED;
     }
-    if(tx >= -HALF_REGION && ir.x > (SCREEN_W - L_PAN_W)){
-        tx-=PAN_SPEED;
+    if(x >= -HALF_REGION && ir.x > (SCREEN_W - L_PAN_W)){
+        x-=PAN_SPEED;
     }
-    if(tx < 0 && ir.x <= H_PAN_W){
-        tx+=PAN_SPEED;
+    if(x < 0 && ir.x <= H_PAN_W){
+        x+=PAN_SPEED;
     }
-    if(tx >= -HALF_REGION && ir.x > (SCREEN_W - H_PAN_W)){
-        tx-=PAN_SPEED;
+    if(x >= -HALF_REGION && ir.x > (SCREEN_W - H_PAN_W)){
+        x-=PAN_SPEED;
     }
 
-    if(tx <= -HALF_REGION){
-        tx = -HALF_REGION;
+    if(x <= -HALF_REGION){
+        x = -HALF_REGION;
     }
-    if(tx >= 0){
-        tx = 0;
+    if(x >= 0){
+        x = 0;
     }
-    x = lerp(x, tx, .20f);
 }
 
 void drawPanelText(){
@@ -354,6 +398,7 @@ int gameSceneMain(){
     u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad}; // FOR CAM LAYOUT BUTTONS
     char buffer[100];
     u8 CamStaticRandom = (rand()%15) + 1;
+    sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     while (1)
     {
         WPAD_ScanPads();
@@ -362,6 +407,8 @@ int gameSceneMain(){
         IR_Y = ir.y * (480.0f / 460.0f);
         drawOffice();
         drawFan();   
+        GRRLIB_Screen2Texture(0, 0, sceneTex, false);
+        DrawWarpedScene();
         drawPanelButton();
         drawControlPanel();
         drawCamPanel();
@@ -434,6 +481,7 @@ int gameSceneMain(){
     }
     GRRLIB_FreeTexture(panelClick);
     GRRLIB_FreeTexture(camClick);
+    GRRLIB_FreeTexture(sceneTex);
     FreeImgAnim(&office);
     FreeImgAnim(&fan);
     FreeImgAnim(&controlPanel);

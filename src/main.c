@@ -45,10 +45,6 @@ u8* loadOgg(const char* path, s32 *sizeOut)
     return buf;
 }
 
-float lerp(float a, float b, float t){
-    return a + (b - a) * t;
-}
-
 
 int main(int argc, char *argv[]){
     fatInitDefault();
@@ -58,8 +54,8 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    //gameSceneMain();
-    warningSceneMain();
+    gameSceneMain();
+    //warningSceneMain();
     //menuSceneMain();
     //adSceneMain();
     GRRLIB_Exit();
