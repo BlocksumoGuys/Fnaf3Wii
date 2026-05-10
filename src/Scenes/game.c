@@ -37,7 +37,9 @@ IMG_Anim CamLayout = {0};
 u8 CamLayout_f = 0;
 IMG_Anim CamLayoutNmb = {0};
 IMG_Anim CamStatic = {0};
-u8 CamStatic_alpha = 100;
+u8 CamStatic_alpha = 50;
+IMG_Anim white_blip = {0};
+u8 blip_f = 10;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -142,6 +144,11 @@ void InitAllImg(){
     CamStatic.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/291.png");
     CamStatic.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/292.png");
     CamStatic.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/33.png");
+    white_blip.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/150.png");
+    white_blip.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/151.png");
+    white_blip.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/152.png");
+    white_blip.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/153.png");
+    white_blip.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/154.png");
     cursor = GRRLIB_LoadTexture(pointer_png);
     font = GRRLIB_LoadTexture(font_png);
     panelClick = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/77.png");
@@ -162,6 +169,13 @@ void drawNightInf(){
     else{
         GRRLIB_DrawImg(tx, ty, NightTimeFont.frames[1], 0, .6, .6, 0xFFFFFFFF);
         GRRLIB_DrawImg(tx + (NightTimeFont.frames[1]->w/2), ty, NightTimeFont.frames[2], 0, .6, .6, 0xFFFFFFFF);        
+    }
+}
+
+void drawBlip(){
+    GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, white_blip.frames[blip_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    if(blip_f<4 && frame%2==0){
+        blip_f++;
     }
 }
 
@@ -317,21 +331,20 @@ void drawCamStatic(){
     static u8 CamStatic_f = 0;
     GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, CamStatic.frames[CamStatic_f], 0, 825.0f/1021.2f, 650.0f/768.0f, 0xFFFFFF00+CamStatic_alpha);
     CamStatic_f = (CamStatic_f+1)%3;
-    if(CamStatic_alpha>50 && frame%2==0){
-        CamStatic_alpha--;
+    if(CamStatic_alpha>50){
+        CamStatic_alpha-=3;
     }
 }
 
 void drawCamLayout(){
     if(camButton_alpha != 50) return;
-    drawCamStatic();
     int y_pad = 0;
     int x_pad = -30;
     u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
     u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
     if(MapLayoutNormalMode == 0){
         GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
-    }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
+    }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
     GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
     GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -365,8 +378,8 @@ int gameSceneMain(){
     u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad}; // FOR CAM LAYOUT BUTTONS
     u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad}; // FOR CAM LAYOUT BUTTONS
     char buffer[100];
-    u8 CamStaticRandom = (rand()%15) + 1;
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
+    u64 buttonCamDelay = 0;
     while (1)
     {
         WPAD_ScanPads();
@@ -379,6 +392,10 @@ int gameSceneMain(){
         drawPanelButton();
         drawControlPanel();
         drawCamPanel();
+        drawCamStatic();
+        if(blip_f < 4){
+            drawBlip();
+        }
         drawCamLayout();
         drawCamButton();
         if(DEBUG){
@@ -402,9 +419,10 @@ int gameSceneMain(){
                     isCamOpen = !isCamOpen;
                 }
                 for(int i = 0; i < 10; i++){
-                    if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i])){
+                    if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i]) && buttonCamDelay >= 20){
                         selected_cam = i + 1;
-                        CamStatic_alpha = 255;
+                        blip_f = 0;
+                        CamStatic_alpha = 200;
                     }   
                 }             
             }
@@ -435,14 +453,11 @@ int gameSceneMain(){
         if(frame%60==0){ //global each second timer
             MapLayoutNormalMode = !MapLayoutNormalMode;
         }
-        if(frame%60*CamStaticRandom==0){
-            CamStatic_alpha = (rand()%50) + 51;
-            CamStaticRandom = (rand()%15) + 1;
-        }
         if(time_am == 6){break;}
         drawCursor();
         GRRLIB_Render();
         frame++;
+        buttonCamDelay++;
     }
     GRRLIB_FreeTexture(panelClick);
     GRRLIB_FreeTexture(camClick);
@@ -457,5 +472,6 @@ int gameSceneMain(){
     FreeImgAnim(&CamLayoutNmb);
     FreeImgAnim(&triangle);
     FreeImgAnim(&CamStatic);
+    FreeImgAnim(&white_blip);
     return 0;
 }
