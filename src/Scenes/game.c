@@ -7,6 +7,7 @@
 #define SCREEN_H 480
 #define CONTROL_PANEL_X 266
 #define CONTROL_PANEL_Y 453
+#define STRIP_W 4
 float x = 0;
 float tx = 0.0f;
 ir_t ir;
@@ -54,48 +55,16 @@ bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
 }
 
 void DrawWarpedScene(){
-    int stripW = 4;
-
-    for(int sx = 0; sx < SCREEN_W; sx += stripW){
-
+    GRRLIB_Screen2Texture(0, 0, sceneTex, false);
+    for(int sx = 0; sx < SCREEN_W; sx += STRIP_W){
         float u = (float)sx / SCREEN_W;
-
         float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
-
-        float scaleY = 1.0f + dist * 0.5f;
-
+        float scaleY = 1.0f + dist * 0.2f;
         float h = SCREEN_H * scaleY;
-
         float y = (SCREEN_H - h) * 0.5f;
-
-        GRRLIB_DrawPart(
-            sx,
-            y,
-            sx,
-            0,
-            stripW,
-            SCREEN_H,
-            sceneTex,
-            0,
-            1.0f,
-            scaleY,
-            0xFFFFFFFF
-        );
+        GRRLIB_DrawPart(sx, y, sx, 0, STRIP_W, SCREEN_H, sceneTex, 0, 1.0f, scaleY, 0xFFFFFFFF);
     }
 }
-
- /*  int stripW = 4;
-    for(int sx = 0; sx < SCREEN_W; sx += stripW){
-        float u = (float)sx / SCREEN_W;
-        float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
-        float scaleY = 1.0f + dist * 0.5f;
-        float worldX = -x + sx;
-        GRRLIB_texImg *tex = (worldX < office.frames[0]->w) ? office.frames[0] : office.frames[1];
-        float localX = (worldX < office.frames[0]->w) ? worldX : worldX - office.frames[0]->w;
-        float h = SCREEN_H * scaleY;
-        float y = (SCREEN_H - h) * 0.5f;
-        GRRLIB_DrawPart(sx, y, localX, 0, stripW, tex->h, tex, 0, IMG_SCALE, IMG_SCALE * scaleY, 0xFFFFFFFF);
-    } */
 
 void InitAllImg(){
     office.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/203(1).png"); // normal 1
@@ -144,7 +113,7 @@ void InitAllImg(){
     CamPanel.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/59.png");
     CamLayout.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/532.png"); // cam layout
     CamLayout.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/626.png"); // vent layout
-    CamLayout.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/574.png"); // cam layout 2
+    CamLayout.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/574.png"); // cam layout 2
     CamLayout.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/627.png"); // vent layout 2
     CamLayoutNmb.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/81.png");
     CamLayoutNmb.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/83.png"); // ALL IS CAM NUM
@@ -254,7 +223,6 @@ void drawOffice(){
         GRRLIB_Rectangle(0, 0, H_PAN_W, 480, 0x680068FF, true); // heavy left pan
         GRRLIB_Rectangle(640 - H_PAN_W, 0, H_PAN_W, 480, 0x680068FF, true); // heavy right pan
     }
-    // size of pans: 160x480
     if(!canPan) return;
     if(x < 0 && ir.x <= L_PAN_W){
         x+=PAN_SPEED;
@@ -263,10 +231,10 @@ void drawOffice(){
         x-=PAN_SPEED;
     }
     if(x < 0 && ir.x <= H_PAN_W){
-        x+=PAN_SPEED;
+        x+=(PAN_SPEED/2);
     }
     if(x >= -HALF_REGION && ir.x > (SCREEN_W - H_PAN_W)){
-        x-=PAN_SPEED;
+        x-=(PAN_SPEED/2);
     }
 
     if(x <= -HALF_REGION){
@@ -406,16 +374,13 @@ int gameSceneMain(){
         WPAD_IR(0, &ir);
         IR_Y = ir.y * (480.0f / 460.0f);
         drawOffice();
-        drawFan();   
-        GRRLIB_Screen2Texture(0, 0, sceneTex, false);
-        DrawWarpedScene();
+        drawFan();
+        DrawWarpedScene(); //anything drew before this are getting warped
         drawPanelButton();
         drawControlPanel();
         drawCamPanel();
         drawCamLayout();
         drawCamButton();
-        //sprintf(buffer, "%.1f, %.1f", ir.x, IR_Y);
-        //GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
         if(DEBUG){
             sprintf(buffer, "X: %d \n mX: %.1f, mY: %.1f", x, ir.x, IR_Y);
             GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
