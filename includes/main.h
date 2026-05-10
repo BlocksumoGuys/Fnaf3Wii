@@ -1,7 +1,7 @@
 #pragma once
 
 #define IMG_SCALE 1
-#define MAX_FRAMES 20
+#define MAX_FRAMES 25
 #define NIGHT 1
 #define DEBUG false
 
