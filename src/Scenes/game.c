@@ -18,6 +18,7 @@ bool canPan = true;
 bool isCamOpen = false;
 bool camLayoutSelection = 0; // 0 is normal, 1 is vent 
 bool hallucinating = false;
+bool ScreenOpen = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -42,6 +43,8 @@ u8 CamStatic_alpha = 50;
 IMG_Anim white_blip = {0};
 u8 blip_f = 10;
 IMG_Anim neutral_cams = {0};
+IMG_Anim springtrap_cams = {0};
+IMG_Anim backdrop = {0};
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -49,11 +52,22 @@ GRRLIB_texImg *camClick = NULL;
 GRRLIB_texImg *sceneTex = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
-int mon_cam = -1;
+u8 picrandom;
+int mon_cam = 0;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7};
-u8 camHealth = 0;
+int camHealth = 0;
 u8 CamErrorTimer = 0;
 bool MapLayoutNormalMode = false;
+
+int move_counter = 0; // for sprintrap ai
+bool aggresive = false;
+u8 action_selected = 0;
+u8 attack_stage = 0;
+u8 total_turns = 0; // for springtrap ai
+
+u8 blackout_alpha = 0;
+u8 closed_vent = 0;
+
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
@@ -176,6 +190,33 @@ void InitAllImg(){
     neutral_cams.frames[21] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/628.png"); // cam 13 (vent)
     neutral_cams.frames[22] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/824.png"); // cam 14 (vent)
     neutral_cams.frames[23] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/818.png"); // cam 15 (vent)
+
+    springtrap_cams.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/295.png"); // cam 1
+    springtrap_cams.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/132.png"); // cam 2 frame 1
+    springtrap_cams.frames[2] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/133.png"); // cam 2 frame 2
+    springtrap_cams.frames[3] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/121.png"); // cam 3
+    springtrap_cams.frames[4] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/122.png"); // cam 4
+    springtrap_cams.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/119.png"); // cam 5 frame 1
+    springtrap_cams.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/120.png"); // cam 5 frame 2
+    springtrap_cams.frames[7] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/117.png"); // cam 6 frame 1
+    springtrap_cams.frames[8] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/118.png"); // cam 6 frame 2
+    springtrap_cams.frames[9] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/124.png"); // cam 7 frame 1
+    springtrap_cams.frames[10] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/125.png"); // cam 7 frame 2
+    springtrap_cams.frames[11] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/126.png"); // cam 7 frame 3
+    springtrap_cams.frames[12] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/125.png"); // cam 7 frame 4 (yes, same as frame 2)
+    springtrap_cams.frames[13] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/127.png"); // cam 8 frame 1
+    springtrap_cams.frames[14] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/128.png"); // cam 8 frame 2
+    springtrap_cams.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/129.png"); // cam 8 frame 3
+    springtrap_cams.frames[16] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/128.png"); // cam 8 frame 4 (yes, same as frame 2)
+    springtrap_cams.frames[17] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/130.png"); // cam 9
+    springtrap_cams.frames[18] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/131.png"); // cam 10
+    springtrap_cams.frames[19] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/829.png"); // cam 11 (vent)
+    springtrap_cams.frames[20] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/831.png"); // cam 12 (vent)
+    springtrap_cams.frames[21] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/835.png"); // cam 13 (vent)
+    springtrap_cams.frames[22] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/841.png"); // cam 14 (vent)
+    springtrap_cams.frames[23] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/832.png"); // cam 15 (vent)
+    backdrop.frames[0] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/205(1).png");
+    backdrop.frames[1] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/205(2).png");
     cursor = GRRLIB_LoadTexture(pointer_png);
     font = GRRLIB_LoadTexture(font_png);
     panelClick = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/77.png");
@@ -200,38 +241,60 @@ void drawCams(){
     switch (selected_cam)
     {
     case 2:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam2_f + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        break;  
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam2_f + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam2_f + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break;
     case 5:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam5_f + 5], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        break;  
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam5_f + 5], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam5_f + 5], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break; 
     case 6:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam6_f + 7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        break;  
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam6_f + 7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam6_f + 7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break;
     case 7:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam7_f + 9], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        break;  
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam7_f + 9], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam7_f + 9], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break;
     case 8:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam8_f + 13], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam8_f + 13], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam8_f + 13], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
         
     case 1:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     case 9:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     case 10:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     case 3:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     case 4:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     default:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam+8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for cams
+        if(selected_cam == mon_cam){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam + 8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for vents iirc
+        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam + 8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     }
     if(frame%25==0){
@@ -290,7 +353,7 @@ void drawControlPanel(){
                 controlPanel_f+=1;
                 canPanelButtonBeClicked = false;           
             }
-            else{PanelButtonVisible = false;}
+            else{PanelButtonVisible = false; ScreenOpen = true; isControlPanelOpen = true;}
         }
     }
     else if(isControlPanelOpen == 2){
@@ -301,7 +364,7 @@ void drawControlPanel(){
             if(controlPanel_f!=0){
                 controlPanel_f-=1;
             }
-            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = 0;}
+            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = 0; ScreenOpen = false;}
         }
     }
 }
@@ -389,7 +452,6 @@ void drawPanelText(){
 
 void drawCamButton(){
     if(fabs(x + HALF_REGION) > 1.0f) return;
-    if(frame)
     GRRLIB_DrawImg(540, 73, camClick, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + camButton_alpha);
 }
 
@@ -402,7 +464,7 @@ void drawCamPanel(){
             if(CamPanel_f < 9){
                 CamPanel_f+=1;
                 camButton_alpha = 99;
-            }else{camButton_alpha = 50;}
+            }else{camButton_alpha = 50; ScreenOpen = true;}
         }
     }else{
         
@@ -411,7 +473,7 @@ void drawCamPanel(){
             if(CamPanel_f > 0){
                 CamPanel_f-=1;
                 camButton_alpha = 99;
-            }else{camButton_alpha = 100; canPan = true; CamPanel_alpha = 0;}
+            }else{camButton_alpha = 100; canPan = true; CamPanel_alpha = 0; ScreenOpen = false;}
         }
     }
 }
@@ -480,11 +542,239 @@ void drawCamLayout(){
     GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2), CamLayoutNmb.frames[19], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // end big buttons
 }
 
+void drawBackdrop(){
+    GRRLIB_DrawImg(x, 0, backdrop.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(x+backdrop.frames[0]->w, 0, backdrop.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+}
+
+void AC_calc(){
+    if(action_selected == 1){
+        action_selected = 0;
+        total_turns++;
+        return;
+    }
+    if(action_selected > 1 && action_selected < 4){
+        if(mon_cam == 10){
+            mon_cam = 9;
+        }
+    }
+    if(action_selected == 2){
+        switch (mon_cam)
+        {
+        case 11:
+            if(closed_vent == mon_cam){
+                mon_cam = 9;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 12:
+            if(closed_vent == mon_cam){
+                mon_cam = 7;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 13:
+            if(closed_vent == mon_cam){
+                mon_cam = 5;
+            }else {mon_cam = 0; attack_stage = 1;}
+            break;     
+        case 14:
+            if(closed_vent == mon_cam){
+                mon_cam = 10;
+            }else{}//JUMPSCARE}
+            break;
+        case 15:
+            if(closed_vent == mon_cam){
+                mon_cam = 2;
+            }else{}//JUMPSCARE
+            break;  
+        case 9:
+            mon_cam = 10;
+            break;
+        case 8:
+            mon_cam = 9;
+            break;
+        case 7:
+            mon_cam = 8;
+            break;
+        case 6:
+            mon_cam = 7;
+            break;
+        case 5:
+            mon_cam = 6;
+            break;
+        case 3:
+            mon_cam = 4;
+            break;
+        case 1:
+            if(ScreenOpen == true){
+                mon_cam = 0;
+                attack_stage = 3;
+            }
+            break;
+        }
+    }
+    if(action_selected == 3){
+        switch (mon_cam)
+        {
+        case 11:
+            if(closed_vent == mon_cam){
+                mon_cam = 9;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 12:
+            if(closed_vent == mon_cam){
+                mon_cam = 7;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 13:
+            if(closed_vent == mon_cam){
+                mon_cam = 5;
+            }else {mon_cam = 0; attack_stage = 1;}
+            break;     
+        case 14:
+            if(closed_vent == mon_cam){
+                mon_cam = 10;
+            }else{}//JUMPSCARE}
+            break;
+        case 15:
+            if(closed_vent == mon_cam){
+                mon_cam = 2;
+            }else{}//JUMPSCARE
+            break;  
+        case 9:
+            mon_cam = 8;
+            break;
+        case 8:
+            mon_cam = 7;
+            break;
+        case 7:
+            mon_cam = 6;
+            break;
+        case 3:
+            mon_cam = 0;
+            attack_stage = 1;
+            break;
+        case 2:
+            mon_cam = 4;
+            break;
+        case 1:
+            if(ScreenOpen == true){
+                mon_cam = 0;
+                attack_stage = 3;
+            }
+            break;
+        }
+
+    }
+    if(action_selected == 4){
+        switch (mon_cam)
+        {
+        case 11:
+            if(closed_vent == mon_cam){
+                mon_cam = 9;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 12:
+            if(closed_vent == mon_cam){
+                mon_cam = 7;
+            }else {mon_cam = 0; attack_stage = 3;}
+            break;
+        case 13:
+            if(closed_vent == mon_cam){
+                mon_cam = 5;
+            }else {mon_cam = 0; attack_stage = 1;}
+            break;     
+        case 14:
+            if(closed_vent == mon_cam){
+                mon_cam = 10;
+            }else{}//JUMPSCARE}
+            break;
+        case 15:
+            if(closed_vent == mon_cam){
+                mon_cam = 2;
+            }else{}//JUMPSCARE
+            break;        
+        case 10:
+            mon_cam = 14;
+            break;
+        case 9:
+            mon_cam = 11;
+            break;
+        case 8:
+            mon_cam = 5;
+            break;
+        case 7:
+            mon_cam = 12;
+            break;
+        case 5:
+            if(picrandom == 0){
+                mon_cam = 4;
+            }
+            break;
+        case 3:
+            mon_cam = 0;
+            attack_stage = 1;
+            break;
+        case 2:
+            if(picrandom == 0){
+                mon_cam = 0;
+                attack_stage = 1;
+            }
+            break;
+        case 1:
+            if(ScreenOpen == true){
+                mon_cam = 0;
+                attack_stage = 3;
+            }
+            break;
+        }
+
+    }
+    if(action_selected > 2 && ScreenOpen == true && attack_stage == 1){
+        attack_stage = 2;
+
+    }
+    if(action_selected > 2 && attack_stage == 2){
+        attack_stage = 3;
+
+    }
+    if(action_selected == 2 && attack_stage == 3){
+        attack_stage = 0;
+        mon_cam = 1;
+
+    }
+    if(action_selected > 2 && attack_stage == 3){
+        attack_stage = 4;
+
+    }
+    if(attack_stage == 3 && blackout_alpha > 250){
+        attack_stage = 4;
+
+    }
+    if(mon_cam == 1 && blackout_alpha > 250){
+        attack_stage = 4;
+        mon_cam = 0;
+
+    }
+    if(attack_stage == 4 && action_selected > 1 && isControlPanelOpen == true){
+        // JUMPSCARE
+    }
+    if(attack_stage == 4 && action_selected > 1 && camButton_alpha == 50){
+        // RUN ANIMATION THEN JUMPSCARE
+    }
+    if(attack_stage == 4 && blackout_alpha > 250){
+        // JUMPSCARE
+    }
+    action_selected = 0;
+}
+
+#include <malloc.h>
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     InitAllImg();
+    srand(time(NULL));
     s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
     s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
     u16 x_l[15] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
@@ -492,13 +782,17 @@ int gameSceneMain(){
     char buffer[100];
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
-    u8 picrandom = rand()%2;
+    picrandom = rand()%2;
+    if(NIGHT!=1){
+        mon_cam = (rand() % 5) + 6;
+    }
     while (1)
     {
         WPAD_ScanPads();
         mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir);
         IR_Y = ir.y * (480.0f / 460.0f);
+        drawBackdrop();
         drawOffice();
         drawFan();
         DrawWarpedScene(); //anything drew before this are getting warped
@@ -512,10 +806,10 @@ int gameSceneMain(){
         }
         drawCamLayout();
         drawCamButton();
-        if(DEBUG){
-            sprintf(buffer, "X: %d \n mX: %.1f, mY: %.1f", x, ir.x, IR_Y);
-            GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, .4, buffer);
-        }
+        //sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
+        struct mallinfo m = mallinfo();
+        sprintf(buffer, "%d, %d", m.fordblks / 1024, m.uordblks / 1024);
+        GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
                 if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){isControlPanelOpen = 1;}
@@ -585,12 +879,20 @@ int gameSceneMain(){
         }
         if(frame%60==0){ //global each second timer
             MapLayoutNormalMode = !MapLayoutNormalMode;
+            if(move_counter>(10 - Springtrap_AI[NIGHT-1] - aggresive)+((rand()%16)-total_turns)){ // ai blabla
+                action_selected = rand() % (3 + aggresive + 2);
+                AC_calc();
+                move_counter = 0;
+                total_turns = 0;
+            }
+            move_counter++;
         }
         if(frame%(60*10)==0){ //global 10 second timer
             if(selected_cam != mon_cam){
                 picrandom = rand()%3; // idk what is this used for  but ig
             }
         }
+        // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am == 6){break;}
         drawCursor();
         GRRLIB_Render();
@@ -612,5 +914,7 @@ int gameSceneMain(){
     FreeImgAnim(&CamStatic);
     FreeImgAnim(&white_blip);
     FreeImgAnim(&neutral_cams);
+    FreeImgAnim(&springtrap_cams);
+    FreeImgAnim(&backdrop);
     return 0;
 }
