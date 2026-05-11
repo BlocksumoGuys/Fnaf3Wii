@@ -415,41 +415,63 @@ void drawCamStatic(){
     static u8 CamStatic_f = 0;
     GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, CamStatic.frames[CamStatic_f], 0, 825.0f/1021.2f, 650.0f/768.0f, 0xFFFFFF00+CamStatic_alpha);
     CamStatic_f = (CamStatic_f+1)%3;
-    if(CamStatic_alpha>50){
+    if(CamStatic_alpha>80){
         CamStatic_alpha-=3;
     }
 }
 
 void drawCamLayout(){
     if(camButton_alpha != 50) return;
-    int y_pad = 0;
-    int x_pad = -30;
-    u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
-    u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
-    if(MapLayoutNormalMode == 0){
-        GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
-    }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
-    GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
-    GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(560+x_pad, 330+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    // there's no fifth one
-    GRRLIB_DrawImg(414+x_pad, 344+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(414+x_pad, 304+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(461+x_pad, 300+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(500+x_pad, 270+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(547+x_pad, 289+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+    if(!camLayoutSelection){
+        int y_pad = 0;
+        int x_pad = -30;
+        u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
+        u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
+        if(MapLayoutNormalMode == 0){
+            GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
+        }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
+        GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+        GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(560+x_pad, 330+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        // there's no fifth one
+        GRRLIB_DrawImg(414+x_pad, 344+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(414+x_pad, 304+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(461+x_pad, 300+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(500+x_pad, 270+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(547+x_pad, 289+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
 
-    for(int i = 0; i<10; i++){
-        if(selected_cam-1 == i){
-            GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
-        GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
+        for(int i = 0; i<10; i++){
+            if(selected_cam-1 == i){
+                GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
+            GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
+        }
     }
-    GRRLIB_DrawImg(298+x_pad, 332+y_pad, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
-    GRRLIB_DrawImg(298+x_pad, 381+y_pad, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(298+x_pad + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+y_pad+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
-    GRRLIB_DrawImg(298+x_pad + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+y_pad+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2), CamLayoutNmb.frames[19], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // end big buttons
+    else{ // for vent
+        u16 x_l[5] = {363, 399, 454, 501, 529};
+        u16 y_l[5] = {236, 313, 352, 301, 392};
+        if(MapLayoutNormalMode == 0){
+            GRRLIB_DrawImg(326, 222, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
+        }else{GRRLIB_DrawImg(326, 222, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
+        GRRLIB_DrawImg(375, 253, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+        GRRLIB_DrawImg(382, 319, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(438, 358, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(531, 307, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(512, 397, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for triangles
+
+        for(int i = 0; i<5; i++){
+            if(selected_cam-1 == i){
+                GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
+            GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[i+11]->w/2), y_l[i] + (CamLayoutNmb.frames[i+11]->h/2), CamLayoutNmb.frames[i + 11], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+    }
+
+    GRRLIB_DrawImg(268, 332, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
+    GRRLIB_DrawImg(268, 381, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
+    GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2), CamLayoutNmb.frames[19], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // end big buttons
 }
 
 int gameSceneMain(){
@@ -459,8 +481,8 @@ int gameSceneMain(){
     InitAllImg();
     s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
     s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
-    u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad}; // FOR CAM LAYOUT BUTTONS
-    u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad}; // FOR CAM LAYOUT BUTTONS
+    u16 x_l[15] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
+    u16 y_l[15] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad, 236, 313, 352, 301, 392}; // FOR CAM LAYOUT BUTTONS
     char buffer[100];
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
@@ -505,12 +527,31 @@ int gameSceneMain(){
                     isCamOpen = !isCamOpen;
                 }
                 for(int i = 0; i < 10; i++){
-                    if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i]) && buttonCamDelay >= 20){
-                        selected_cam = i + 1;
-                        blip_f = 0;
-                        CamStatic_alpha = 200;
-                    }   
-                }             
+                    if(camLayoutSelection == 0){
+                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i]) && buttonCamDelay >= 20){
+                            selected_cam = i + 1;
+                            blip_f = 0;
+                            CamStatic_alpha = 255;
+                            buttonCamDelay = 0;
+                        }  
+                    } 
+                }
+                for(int i = 0; i < 5; i++){
+                    if(camLayoutSelection == 1){
+                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i + 10], y_l[i + 10]) && buttonCamDelay >= 20){
+                            selected_cam = i + 1;
+                            blip_f = 0;
+                            CamStatic_alpha = 255;
+                            buttonCamDelay = 0;
+                        }  
+                    }                 
+                }
+                if(IsCursorWithinImg(CamLayoutNmb.frames[18], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2)) && camButton_alpha == 50){ // for map toggle, SON :sob:
+                    if(camLayoutSelection == 0){
+                        selected_cam = 11;
+                    }else{selected_cam = 2;}
+                    camLayoutSelection = !camLayoutSelection;
+                }          
             }
         }
         drawPanelText();
@@ -541,7 +582,7 @@ int gameSceneMain(){
         }
         if(frame%(60*10)==0){ //global 10 second timer
             if(selected_cam != mon_cam){
-                picrandom = rand()%3; // fro
+                picrandom = rand()%3; // idk what is this used for  but ig
             }
         }
         if(time_am == 6){break;}

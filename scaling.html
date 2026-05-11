@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GRRLIB Coordinate Tool (Fixed Rotation)</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #1e1e1e;
+    color: white;
+}
+
+#toolbar {
+    background: #333;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#canvasWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 120px);
+}
+
+canvas {
+    background: #222;
+    border: 1px solid #555;
+    cursor: crosshair;
+}
+
+input {
+    width: 80px;
+    padding: 4px;
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+}
+
+button {
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+#info {
+    padding: 10px;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+    <input type="file" id="upload" multiple>
+
+    <label>Virtual W:</label>
+    <input id="vw" type="number" value="640">
+
+    <label>Virtual H:</label>
+    <input id="vh" type="number" value="480">
+
+    <button id="applyBtn">Apply</button>
+    <button id="rotateBtn">Rotate +90°</button>
+    <button id="clearBtn">Clear</button>
+</div>
+
+<div id="canvasWrapper">
+    <canvas id="canvas"></canvas>
+</div>
+
+<div id="info">Select an image</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let virtualWidth = 640;
+let virtualHeight = 480;
+let scale = 1;
+
+let images = [];
+let selected = null;
+
+let offsetX = 0;
+let offsetY = 0;
+let dragging = false;
+
+function resizeCanvas() {
+    const maxW = window.innerWidth * 0.9;
+    const maxH = window.innerHeight * 0.7;
+
+    scale = Math.min(
+        maxW / virtualWidth,
+        maxH / virtualHeight
+    );
+
+    canvas.width = virtualWidth * scale;
+    canvas.height = virtualHeight * scale;
+
+    draw();
+}
+
+function applyResolution() {
+    virtualWidth = parseInt(document.getElementById('vw').value);
+    virtualHeight = parseInt(document.getElementById('vh').value);
+
+    resizeCanvas();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    for (const obj of images) {
+
+        const cx = obj.x + obj.w / 2;
+        const cy = obj.y + obj.h / 2;
+
+        ctx.save();
+
+        ctx.translate(cx, cy);
+        ctx.rotate(obj.rot * Math.PI / 180);
+
+        ctx.drawImage(
+            obj.img,
+            -obj.w / 2,
+            -obj.h / 2,
+            obj.w,
+            obj.h
+        );
+
+        if (obj === selected) {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2 / scale;
+
+            ctx.strokeRect(
+                -obj.w / 2,
+                -obj.h / 2,
+                obj.w,
+                obj.h
+            );
+        }
+
+        ctx.restore();
+    }
+
+    ctx.restore();
+}
+
+function updateInfo() {
+
+    if (!selected) {
+        document.getElementById('info').innerHTML =
+            'Select an image';
+        return;
+    }
+
+    const centerX = selected.x + selected.w / 2;
+    const centerY = selected.y + selected.h / 2;
+
+    document.getElementById('info').innerHTML = `
+Top-left: x=${Math.round(selected.x)}, y=${Math.round(selected.y)}<br>
+Center: x=${Math.round(centerX)}, y=${Math.round(centerY)}<br>
+Rotation: ${selected.rot}°<br>
+Width=${selected.w}, Height=${selected.h}
+`;
+}
+
+function rotate90() {
+
+    if (!selected) return;
+
+    selected.rot = (selected.rot + 90) % 360;
+
+    draw();
+    updateInfo();
+}
+
+function clearImages() {
+    images = [];
+    selected = null;
+
+    draw();
+    updateInfo();
+}
+
+document.getElementById('upload')
+.addEventListener('change', (e) => {
+
+    for (const file of e.target.files) {
+
+        const img = new Image();
+
+        img.src = URL.createObjectURL(file);
+
+        img.onload = () => {
+
+            images.push({
+                img,
+                x: 0,
+                y: 0,
+                w: img.width,
+                h: img.height,
+                rot: 0
+            });
+
+            draw();
+        };
+    }
+});
+
+canvas.addEventListener('mousedown', (e) => {
+
+    dragging = true;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+
+    selected = null;
+
+    for (let i = images.length - 1; i >= 0; i--) {
+
+        const obj = images[i];
+
+        if (
+            mx >= obj.x &&
+            mx <= obj.x + obj.w &&
+            my >= obj.y &&
+            my <= obj.y + obj.h
+        ) {
+            selected = obj;
+
+            offsetX = mx - obj.x;
+            offsetY = my - obj.y;
+
+            break;
+        }
+    }
+
+    draw();
+    updateInfo();
+});
+
+canvas.addEventListener('mousemove', (e) => {
+
+    if (!dragging || !selected) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+
+    selected.x = mx - offsetX;
+    selected.y = my - offsetY;
+
+    draw();
+    updateInfo();
+});
+
+canvas.addEventListener('mouseup', () => {
+    dragging = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+    dragging = false;
+});
+
+document.getElementById('applyBtn')
+.addEventListener('click', applyResolution);
+
+document.getElementById('rotateBtn')
+.addEventListener('click', rotate90);
+
+document.getElementById('clearBtn')
+.addEventListener('click', clearImages);
+
+window.addEventListener('resize', resizeCanvas);
+
+resizeCanvas();
+</script>
+
+</body>
+</html>
