@@ -222,10 +222,16 @@ void drawCams(){
         GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     case 10:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break;
+    case 3:
+        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        break;
+    case 4:
+        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
         break;
     default:
-        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for cam 3 & 4
+        GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam+8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for cams
         break;
     }
     if(frame%25==0){
@@ -461,9 +467,9 @@ void drawCamLayout(){
         GRRLIB_DrawImg(512, 397, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for triangles
 
         for(int i = 0; i<5; i++){
-            if(selected_cam-1 == i){
+            if(selected_cam-1 == i + 10){
                 GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-            }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
+            }else GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
             GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[i+11]->w/2), y_l[i] + (CamLayoutNmb.frames[i+11]->h/2), CamLayoutNmb.frames[i + 11], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
     }
@@ -539,7 +545,7 @@ int gameSceneMain(){
                 for(int i = 0; i < 5; i++){
                     if(camLayoutSelection == 1){
                         if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i + 10], y_l[i + 10]) && buttonCamDelay >= 20){
-                            selected_cam = i + 1;
+                            selected_cam = i + 11;
                             blip_f = 0;
                             CamStatic_alpha = 255;
                             buttonCamDelay = 0;
