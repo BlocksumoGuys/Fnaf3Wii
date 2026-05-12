@@ -45,6 +45,7 @@ u8 blip_f = 10;
 IMG_Anim neutral_cams = {0};
 IMG_Anim springtrap_cams = {0};
 IMG_Anim backdrop = {0};
+IMG_Anim springtrap_attack = {0};
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -224,6 +225,7 @@ void InitAllImg(){
     springtrap_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/832.png"); // cam 15 (vent)
     backdrop.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(1).png");
     backdrop.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(2).png");
+    springtrap_attack.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/206.png");
     cursor = GRRLIB_LoadTexture(pointer_png);
     font = GRRLIB_LoadTexture(font_png);
     panelClick = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/77.png");
@@ -620,6 +622,11 @@ void AC_calc(){ // yes, rewriting everything
         if(mon_cam == 15 && closed_vent != 15) {/* DIE */}         
     }
 }
+
+void Stage1(){
+    GRRLIB_DrawImg(x+HALF_REGION+200, 40, springtrap_attack.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -647,6 +654,7 @@ int gameSceneMain(){
         WPAD_IR(0, &ir);
         IR_Y = ir.y * (480.0f / 460.0f);
         drawBackdrop();
+        Stage1();
         drawOffice();
         drawFan();
         DrawWarpedScene(); //anything drew before this are getting warped
@@ -770,5 +778,6 @@ int gameSceneMain(){
     FreeImgAnim(&neutral_cams);
     FreeImgAnim(&springtrap_cams);
     FreeImgAnim(&backdrop);
+    FreeImgAnim(&springtrap_attack);
     return 0;
 }
