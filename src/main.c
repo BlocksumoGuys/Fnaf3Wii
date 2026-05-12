@@ -20,6 +20,7 @@ float CenterY(GRRLIB_texImg *img){
 void FreeImgAnim(IMG_Anim* img_a){
     for(int i = 0; i < MAX_FRAMES; i++){
         GRRLIB_FreeTexture(img_a->frames[i]);
+        img_a->frames[i] = NULL;
     }
 }
 
