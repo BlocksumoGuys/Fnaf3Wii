@@ -35,6 +35,7 @@ u8* loadBuf(const char* path, s32 *sizeOut);
 typedef struct
 {
     GRRLIB_texImg *frames[MAX_FRAMES];
+    bool loaded;
 }IMG_Anim;
 
 void FreeImgAnim(IMG_Anim* img_a);
