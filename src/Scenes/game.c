@@ -371,7 +371,7 @@ void drawControlPanel(){
             if(controlPanel_f!=0){
                 controlPanel_f-=1;
             }
-            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = 0; ScreenOpen = false;}
+            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = false; ScreenOpen = false;}
         }
     }
 }
@@ -554,7 +554,8 @@ void drawBackdrop(){
     GRRLIB_DrawImg(x+backdrop.frames[0]->w, 0, backdrop.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
 }
 
-void AC_calc(){
+void AC_calc(){ // yes, rewriting everything
+    if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
     if(action_selected == 1){
         total_turns++;
         action_selected = 0;
@@ -566,10 +567,57 @@ void AC_calc(){
         }
     }
     if(action_selected == 2){
-        if(mon_cam == 9) {mon_cam == 10; action_selected = 0;}
-        if(mon_cam == 8) {mon_cam == 9; action_selected = 0;}
-        if(mon_cam == 7) {mon_cam == 8; action_selected = 0;}
-        if(mon_cam == 6) {mon_cam == 7; action_selected = 0;}
+        if(mon_cam == 9) {mon_cam = 10; action_selected = 0;}
+        if(mon_cam == 8) {mon_cam = 9; action_selected = 0;}
+        if(mon_cam == 7) {mon_cam = 8; action_selected = 0;}
+        if(mon_cam == 6) {mon_cam = 7; action_selected = 0;}
+        if(mon_cam == 5) {mon_cam = 6; action_selected = 0;}
+        if(mon_cam == 2) {mon_cam = 5; action_selected = 0;}
+        if(mon_cam == 4) {mon_cam = 2; action_selected = 0;}
+        if(mon_cam == 3) {mon_cam = 4; action_selected = 0;}
+        if(attack_stage == 3 && ScreenOpen) {mon_cam = 4; action_selected = 0;}
+        if(mon_cam == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 3; action_selected = 0;}        
+    }
+    if(action_selected == 3){
+        if(mon_cam == 9) {mon_cam = 8; action_selected = 0;}
+        if(mon_cam == 8) {mon_cam = 7; action_selected = 0;}
+        if(mon_cam == 7) {mon_cam = 6; action_selected = 0;}
+        if(mon_cam == 5) {mon_cam = 2; action_selected = 0;}
+        if(mon_cam == 2) {mon_cam = 4; action_selected = 0;}
+    }
+    if(action_selected == 4){
+        if(mon_cam == 10) {mon_cam = 14; action_selected = 0;}
+        if(mon_cam == 9) {mon_cam = 11; action_selected = 0;}
+        if(mon_cam == 8) {mon_cam = 5; action_selected = 0;}
+        if(mon_cam == 7) {mon_cam = 12; action_selected = 0;}
+        if(mon_cam == 5 && picrandom == 0) {mon_cam = 4; action_selected = 0;}
+        if(mon_cam == 5 && picrandom == 1) {mon_cam = 13; action_selected = 0;}
+        if(mon_cam == 2 && picrandom == 0) {mon_cam = 0; attack_stage = 1; action_selected = 0;}
+        if(mon_cam == 2 && picrandom == 1) {mon_cam = 15; action_selected = 0;}
+    }
+    if(action_selected > 2){
+        if(mon_cam == 6) {mon_cam = 5; action_selected = 0;}
+        if(mon_cam == 4) {mon_cam = 3; action_selected = 0;}
+        if(mon_cam == 3) {mon_cam = 0; attack_stage = 1; action_selected = 0;}
+        if(attack_stage == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 2; action_selected = 0;} // ScreenOpen here is used as replacement as the r value of the red ball, might break idk
+        if(attack_stage == 2) {mon_cam = 0; attack_stage = 3; action_selected = 0;}
+        if(attack_stage == 3 && ScreenOpen) {mon_cam = 0; attack_stage = 4; action_selected = 0;}
+        if(mon_cam == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 4; action_selected = 0;}
+    }
+    if(action_selected > 1){
+        if(attack_stage == 4 && isControlPanelOpen) {/* ROLL DOWN PANEL AND DIE */}
+        if(attack_stage == 4 && camButton_alpha == 50) {/* SPRINGTRAP RUN TO THE OTHERSIDE, ROLL DOWN THE CAMS AND DIE */}
+        if(attack_stage == 4 && !ScreenOpen && x < (-HALF_REGION + 30)) {/* PAN TO THE LEFT AND DIE */}
+        if(mon_cam == 11 && closed_vent == 11) {mon_cam = 9; action_selected = 0;}
+        if(mon_cam == 11 && closed_vent != 11) {mon_cam = 0; attack_stage = 3; action_selected = 0;}
+        if(mon_cam == 12 && closed_vent == 12) {mon_cam = 7; action_selected = 0;}
+        if(mon_cam == 12 && closed_vent != 12) {mon_cam = 0; attack_stage = 3; action_selected = 0;}   
+        if(mon_cam == 13 && closed_vent == 13) {mon_cam = 5; action_selected = 0;}
+        if(mon_cam == 13 && closed_vent != 13) {mon_cam = 0; attack_stage = 1; action_selected = 0;}  
+        if(mon_cam == 14 && closed_vent == 14) {mon_cam = 10; action_selected = 0;}
+        if(mon_cam == 14 && closed_vent != 14) {/* DIE */}      
+        if(mon_cam == 15 && closed_vent == 15) {mon_cam = 2; action_selected = 0;}
+        if(mon_cam == 15 && closed_vent != 15) {/* DIE */}         
     }
 }
 int gameSceneMain(){
