@@ -19,6 +19,8 @@ bool isCamOpen = false;
 bool camLayoutSelection = 0; // 0 is normal, 1 is vent 
 bool hallucinating = false;
 bool ScreenOpen = false;
+bool stage3scare = false;
+bool IsCurrentlyClosingPanel = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -46,6 +48,7 @@ IMG_Anim neutral_cams = {0};
 IMG_Anim springtrap_cams = {0};
 IMG_Anim backdrop = {0};
 IMG_Anim springtrap_attack = {0};
+IMG_Anim springtrap_jumpscare = {0};
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -142,26 +145,6 @@ void InitAllImg(){
     CamLayout.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/626.png"); // vent layout
     CamLayout.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/574.png"); // cam layout 2
     CamLayout.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/627.png"); // vent layout 2
-    CamLayoutNmb.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/81.png");
-    CamLayoutNmb.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/83.png"); // ALL IS CAM NUM
-    CamLayoutNmb.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/84.png");
-    CamLayoutNmb.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/85.png");
-    CamLayoutNmb.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/86.png");
-    CamLayoutNmb.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/87.png");
-    CamLayoutNmb.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/88.png");
-    CamLayoutNmb.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/89.png");
-    CamLayoutNmb.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/90.png");
-    CamLayoutNmb.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/91.png");
-    CamLayoutNmb.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/92.png");
-    CamLayoutNmb.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/613.png");
-    CamLayoutNmb.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/614.png");
-    CamLayoutNmb.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/617.png");
-    CamLayoutNmb.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/619.png");
-    CamLayoutNmb.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/621.png"); // cam num
-    CamLayoutNmb.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/82.png"); // normal grey boxes but selected so its green
-    CamLayoutNmb.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/426.png"); // big grey boxes
-    CamLayoutNmb.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/366.png"); // play audio text
-    CamLayoutNmb.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/431.png"); // map toggle text
     triangle.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/95.png");
     triangle.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/93.png");
     triangle.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/96.png");
@@ -200,23 +183,6 @@ void InitAllImg(){
     neutral_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/818.png"); // cam 15 (vent)
     backdrop.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(1).png");
     backdrop.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(2).png");
-    springtrap_attack.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/206.png");
-    springtrap_attack.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/207.png");
-    springtrap_attack.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/208.png");
-    springtrap_attack.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/209.png");
-    springtrap_attack.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/211.png");
-    springtrap_attack.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/212.png");
-    springtrap_attack.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/213.png");
-    springtrap_attack.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/214.png");
-    springtrap_attack.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/217.png");
-    springtrap_attack.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/218.png");
-    springtrap_attack.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/219.png");
-    springtrap_attack.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/220.png");
-    springtrap_attack.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/221.png");
-    springtrap_attack.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/222.png");
-    springtrap_attack.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/223.png");
-    springtrap_attack.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/224.png");
-    springtrap_attack.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/244.png");
     cursor = GRRLIB_LoadTexture(pointer_png);
     font = GRRLIB_LoadTexture(font_png);
     panelClick = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/77.png");
@@ -363,8 +329,9 @@ void drawControlPanel(){
         if(frame%2==0){
             if(controlPanel_f!=0){
                 controlPanel_f-=1;
+                IsCurrentlyClosingPanel = true;
             }
-            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = false; ScreenOpen = false;}
+            else{canPanelButtonBeClicked = true; canPan = true; isControlPanelOpen = false; ScreenOpen = false; IsCurrentlyClosingPanel = false;}
         }
     }
 }
@@ -489,7 +456,36 @@ void drawCamStatic(){
 }
 
 void drawCamLayout(){
-    if(camButton_alpha != 50) return;
+    if(camButton_alpha != 50){
+        if(CamLayoutNmb.loaded){
+            CamLayoutNmb.loaded = false;
+            FreeImgAnim(&CamLayoutNmb);
+        }
+        return;
+    };
+    if(!CamLayoutNmb.loaded){
+        CamLayoutNmb.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/81.png");
+        CamLayoutNmb.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/83.png"); // ALL IS CAM NUM
+        CamLayoutNmb.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/84.png");
+        CamLayoutNmb.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/85.png");
+        CamLayoutNmb.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/86.png");
+        CamLayoutNmb.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/87.png");
+        CamLayoutNmb.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/88.png");
+        CamLayoutNmb.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/89.png");
+        CamLayoutNmb.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/90.png");
+        CamLayoutNmb.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/91.png");
+        CamLayoutNmb.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/92.png");
+        CamLayoutNmb.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/613.png");
+        CamLayoutNmb.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/614.png");
+        CamLayoutNmb.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/617.png");
+        CamLayoutNmb.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/619.png");
+        CamLayoutNmb.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/621.png"); // cam num
+        CamLayoutNmb.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/82.png"); // normal grey boxes but selected so its green
+        CamLayoutNmb.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/426.png"); // big grey boxes
+        CamLayoutNmb.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/366.png"); // play audio text
+        CamLayoutNmb.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/431.png"); // map toggle text
+        CamLayoutNmb.loaded = true;
+    }
     if(!camLayoutSelection){
         int y_pad = 0;
         int x_pad = -30;
@@ -545,6 +541,18 @@ void drawCamLayout(){
 void drawBackdrop(){
     GRRLIB_DrawImg(x, 0, backdrop.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     GRRLIB_DrawImg(x+backdrop.frames[0]->w, 0, backdrop.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+}
+
+void jumpscare(){
+    if(attack_stage == 0) return;
+    if(springtrap_cams.loaded){
+        springtrap_cams.loaded = false;
+        FreeImgAnim(&springtrap_cams);
+    }
+    if(springtrap_attack.loaded){
+        springtrap_cams.loaded = false;
+        FreeImgAnim(&springtrap_attack);
+    }
 }
 
 void AC_calc(){ // yes, rewriting everything
@@ -642,7 +650,34 @@ void Stage1_2(){
             springtrap_cams.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/835.png"); // cam 13 (vent)
             springtrap_cams.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/841.png"); // cam 14 (vent)
             springtrap_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/832.png"); // cam 15 (vent)
+            springtrap_cams.loaded = true;
         }
+        if(springtrap_attack.loaded){
+            springtrap_attack.loaded = false;
+            FreeImgAnim(&springtrap_attack);
+        }
+        return;
+    }
+    if(!springtrap_attack.loaded){
+        springtrap_attack.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/206.png"); // stage 1
+        springtrap_attack.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/207.png"); // stage 2
+        springtrap_attack.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/208.png");
+        springtrap_attack.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/209.png");
+        springtrap_attack.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/211.png");
+        springtrap_attack.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/212.png");
+        springtrap_attack.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/213.png");
+        springtrap_attack.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/214.png");
+        springtrap_attack.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/217.png");
+        springtrap_attack.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/218.png");
+        springtrap_attack.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/219.png");
+        springtrap_attack.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/220.png");
+        springtrap_attack.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/221.png");
+        springtrap_attack.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/222.png");
+        springtrap_attack.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/223.png");
+        springtrap_attack.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/224.png");
+        springtrap_attack.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/244.png"); // stage 2
+        springtrap_attack.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/519.png"); // stage 3
+        springtrap_attack.loaded = true;
     }
     if(attack_stage == 1){
         if(springtrap_cams.loaded){
@@ -652,12 +687,17 @@ void Stage1_2(){
         GRRLIB_DrawImg(x+HALF_REGION+200, 40, springtrap_attack.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     }
     if(attack_stage == 2){
-        GRRLIB_DrawImg(x+HALF_REGION+200 - (springtrap_f*25), 0, springtrap_attack.frames[springtrap_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        if(frame%2==0 && springtrap_f < 18){
+        GRRLIB_DrawImg(x+HALF_REGION+200 - (springtrap_f*26), 0, springtrap_attack.frames[springtrap_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(frame%2==0 && springtrap_f < 16){
             springtrap_f++;
         }
     }
+    //GRRLIB_DrawImg(x+HALF_REGION+200, 40, springtrap_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    //if(attack_stage == 3 && IsCurrentlyClosingPanel){
+        //GRRLIB_DrawImg(x+HALF_REGION, 40, springtrap_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); for later
+    //}
 }
+
 
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
@@ -814,5 +854,6 @@ int gameSceneMain(){
     FreeImgAnim(&springtrap_cams);
     FreeImgAnim(&backdrop);
     FreeImgAnim(&springtrap_attack);
+    FreeImgAnim(&springtrap_jumpscare);
     return 0;
 }
