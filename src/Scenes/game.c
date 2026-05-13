@@ -26,7 +26,8 @@ bool isSealing = false;
 bool isVentCamPressed = false;
 bool audioError = false;
 bool videoError = false;
-bool ventilationError = false;
+bool ventilationError = true;
+bool isRebooting = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -65,7 +66,12 @@ u8 selected_cam = 2;
 u8 picrandom;
 int mon_cam = 0;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 10}; // for last, 7 instead of 10
-int camHealth = 0;
+int camHealth = 10;
+int ventHealth = 10;
+int camProgress = 0;
+int ventProgress = 0;
+int audioProgress = 0;
+int allProgress = 0;
 u8 CamErrorTimer = 0;
 bool MapLayoutNormalMode = false;
 
@@ -172,6 +178,7 @@ void InitAllImg(){
     PanelCommands.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/594.png"); // "reboot all"
     PanelCommands.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/600.png"); // "exit"
     PanelCommands.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/596.png"); // green select cursor
+    PanelCommands.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/601.png"); // error
     NightTimeFont.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/746.png"); // 0
     NightTimeFont.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/747.png"); // 1
     NightTimeFont.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/748.png"); // 2
@@ -458,8 +465,19 @@ void drawPanelButton(){
 }
 
 void drawOffice(){
-    GRRLIB_DrawImg(x, 0, office.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(x+(office.frames[1]->w), 0, office.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    if(!ventilationError){
+        GRRLIB_DrawImg(x, 0, office.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(x+(office.frames[1]->w), 0, office.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    }
+    else{
+        if((frame/15)%2==0){
+            GRRLIB_DrawImg(x, 0, office.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            GRRLIB_DrawImg(x+(office.frames[1]->w), 0, office.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);            
+        }else{
+            GRRLIB_DrawImg(x, 0, office.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            GRRLIB_DrawImg(x+(office.frames[3]->w), 0, office.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+    }
     if(DEBUG){
         GRRLIB_Rectangle(0, 0, L_PAN_W, 480, 0xFF00FFFF, true); // light left pan
         GRRLIB_Rectangle(640 - L_PAN_W, 0, L_PAN_W, 480, 0xFF00FFFF, true); // ligth right pan
@@ -503,6 +521,17 @@ void drawPanelText(){
     if(IsCursorWithinImg(PanelCommands.frames[3], 85, 306)) {panelSelect = 2;}
     if(IsCursorWithinImg(PanelCommands.frames[4], 85, 373)) {panelSelect = 3;}
     if(IsCursorWithinImg(PanelCommands.frames[5], 85, 404)) {panelSelect = 4;}
+    if((frame/15)%2==0){
+        if(audioError){
+            GRRLIB_DrawImg(85+x_pad+180, 235+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+        if(videoError){
+            GRRLIB_DrawImg(85+x_pad+180, 273+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+        if(ventilationError){
+            GRRLIB_DrawImg(85+x_pad+180, 306+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+    }
     switch (panelSelect)
     {
     case 0:
