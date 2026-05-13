@@ -24,6 +24,9 @@ bool IsCurrentlyClosingPanel = false;
 bool isJumpscare = false;
 bool isSealing = false;
 bool isVentCamPressed = false;
+bool audioError = false;
+bool videoError = false;
+bool ventilationError = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -414,7 +417,6 @@ void drawFan(){
 
 void drawControlPanel(){
     if(isControlPanelOpen == 1){
-        canPan = false;
         GRRLIB_DrawImg(10, SCREEN_H - (controlPanel.frames[controlPanel_f]->h) + 5, controlPanel.frames[controlPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         if(frame%2==0){
             if(controlPanel_f!= 10){
@@ -435,7 +437,6 @@ void drawControlPanel(){
             }
             else{
                 canPanelButtonBeClicked = true;
-                canPan = true;
                 isControlPanelOpen = false;
                 ScreenOpen = false;
                 IsCurrentlyClosingPanel = false;
@@ -532,7 +533,6 @@ void drawCamButton(){
 
 void drawCamPanel(){
     if(isCamOpen){
-        canPan = false;
         CamPanel_alpha = 255;
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
@@ -541,14 +541,13 @@ void drawCamPanel(){
                 camButton_alpha = 99;
             }else{camButton_alpha = 50; ScreenOpen = true;}
         }
-    }else{
-        
+    }else{       
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
             if(CamPanel_f > 0){
                 CamPanel_f-=1;
                 camButton_alpha = 99;
-            }else{camButton_alpha = 100; canPan = true; CamPanel_alpha = 0; ScreenOpen = false;}
+            }else{camButton_alpha = 100; CamPanel_alpha = 0; ScreenOpen = false;}
         }
     }
 }
@@ -678,7 +677,6 @@ void drawBackdrop(){
 void jumpscare(){
     if(camButton_alpha == 50){isCamOpen = !isCamOpen;}
     isControlPanelOpen = 2;
-    canPan = false;
     static u8 sp_j = 0;
     GRRLIB_DrawImg(0, SCREEN_H - (springtrap_jumpscare.frames[sp_j]->h), springtrap_jumpscare.frames[sp_j], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     if(frame%4==0 && sp_j < 15){
@@ -844,6 +842,12 @@ int gameSceneMain(){
         mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir);
         IR_Y = ir.y * (480.0f / 460.0f);
+        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1){
+            canPan = false;
+        }
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1){
+            canPan = true;
+        }
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
         Stage1_2();
@@ -878,7 +882,7 @@ int gameSceneMain(){
             if(!PanelButtonVisible){
                 if(panelSelect == 4){isControlPanelOpen = 2;}
             }
-            if(camButton_alpha == 100){
+            if(camButton_alpha == 100 && fabs(x + HALF_REGION) < 1.0f){
                 if(IsCursorWithinImg(camClick, 540, 73)){
                     isCamOpen = !isCamOpen;
                 }
