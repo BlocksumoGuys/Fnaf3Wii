@@ -38,4 +38,13 @@ typedef struct
     bool loaded;
 }IMG_Anim;
 
+typedef struct
+{
+    GRRLIB_texImg *frames[MAX_FRAMES];
+    bool loaded[MAX_FRAMES];
+}IMG_Anim2;
+
+
 void FreeImgAnim(IMG_Anim* img_a);
+void FreeAllImgAnim2(IMG_Anim2* img_a);
+void FreeOneImgAnim2(IMG_Anim2* img_a, u8 i);

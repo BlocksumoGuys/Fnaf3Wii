@@ -24,6 +24,22 @@ void FreeImgAnim(IMG_Anim* img_a){
     }
 }
 
+void FreeAllImgAnim2(IMG_Anim2* img_a){
+    for(int i = 0; i < MAX_FRAMES; i++){
+        if(img_a->frames[i] != NULL){
+            GRRLIB_FreeTexture(img_a->frames[i]);
+            img_a->frames[i] = NULL;
+            img_a->loaded[i] = false;
+        }
+    }    
+}
+
+void FreeOneImgAnim2(IMG_Anim2* img_a, u8 i){
+    GRRLIB_FreeTexture(img_a->frames[i]);
+    img_a->frames[i] = NULL;
+    img_a->loaded[i] = false;
+}
+
 u8* loadBuf(const char* path, s32 *sizeOut)
 {
     FILE *f = fopen(path, "rb");

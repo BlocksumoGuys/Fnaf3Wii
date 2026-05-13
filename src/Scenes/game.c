@@ -45,8 +45,8 @@ IMG_Anim CamStatic = {0};
 u8 CamStatic_alpha = 50;
 IMG_Anim white_blip = {0};
 u8 blip_f = 10;
-IMG_Anim neutral_cams = {0};
-IMG_Anim springtrap_cams = {0};
+IMG_Anim2 neutral_cams = {0};
+IMG_Anim2 springtrap_cams = {0};
 IMG_Anim backdrop = {0};
 IMG_Anim springtrap_attack = {0};
 IMG_Anim springtrap_jumpscare = {0};
@@ -73,13 +73,91 @@ u8 total_turns = 0; // for springtrap ai
 u8 blackout_alpha = 0;
 u8 closed_vent = 0;
 
+const char *sp_cams_arr[24] = {
+    "sd:/fnaf3/assets/images/295.png",
+    "sd:/fnaf3/assets/images/132.png",
+    "sd:/fnaf3/assets/images/133.png",
+    "sd:/fnaf3/assets/images/121.png",
+    "sd:/fnaf3/assets/images/122.png",
+    "sd:/fnaf3/assets/images/119.png",
+    "sd:/fnaf3/assets/images/120.png",
+    "sd:/fnaf3/assets/images/117.png",
+    "sd:/fnaf3/assets/images/118.png",
+    "sd:/fnaf3/assets/images/124.png",
+    "sd:/fnaf3/assets/images/125.png",
+    "sd:/fnaf3/assets/images/126.png",
+    "sd:/fnaf3/assets/images/125.png",
+    "sd:/fnaf3/assets/images/127.png",
+    "sd:/fnaf3/assets/images/128.png",
+    "sd:/fnaf3/assets/images/129.png",
+    "sd:/fnaf3/assets/images/128.png",
+    "sd:/fnaf3/assets/images/130.png",
+    "sd:/fnaf3/assets/images/131.png",
+    "sd:/fnaf3/assets/images/829.png",
+    "sd:/fnaf3/assets/images/831.png",
+    "sd:/fnaf3/assets/images/835.png",
+    "sd:/fnaf3/assets/images/841.png",
+    "sd:/fnaf3/assets/images/832.png"
+};
+
+const char *nt_cams_arr[24] = {
+    "sd:/fnaf3/assets/images/106.png", // 106
+    "sd:/fnaf3/assets/images/97.png", // 97
+    "sd:/fnaf3/assets/images/103.png", // 103
+    "sd:/fnaf3/assets/images/104.png", // 104
+    "sd:/fnaf3/assets/images/105.png", // 105
+    "sd:/fnaf3/assets/images/109.png", // 109
+    "sd:/fnaf3/assets/images/110.png", // 110
+    "sd:/fnaf3/assets/images/98.png", // 98
+    "sd:/fnaf3/assets/images/99.png", // 99
+    "sd:/fnaf3/assets/images/100.png", // 100
+    "sd:/fnaf3/assets/images/101.png", // 101
+    "sd:/fnaf3/assets/images/102.png", // 102
+    "sd:/fnaf3/assets/images/101.png", // 101
+    "sd:/fnaf3/assets/images/112.png", // 112
+    "sd:/fnaf3/assets/images/113.png", // 113
+    "sd:/fnaf3/assets/images/114.png", // 114
+    "sd:/fnaf3/assets/images/113.png", // 113
+    "sd:/fnaf3/assets/images/115.png", // 115
+    "sd:/fnaf3/assets/images/116.png", // 116
+    "sd:/fnaf3/assets/images/623.png",
+    "sd:/fnaf3/assets/images/624.png",
+    "sd:/fnaf3/assets/images/628.png",
+    "sd:/fnaf3/assets/images/824.png",
+    "sd:/fnaf3/assets/images/818.png",
+};
+
+    /*neutral_cams.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/106.png"); // cam 1 106
+    neutral_cams.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/97.png"); // cam 2 frame 1
+    neutral_cams.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/103.png"); // cam 2 frame 2
+    neutral_cams.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/104.png"); // cam 3
+    neutral_cams.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/105.png"); // cam 4
+    neutral_cams.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/109.png"); // cam 5 frame 1
+    neutral_cams.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/110.png"); // cam 5 frame 2
+    neutral_cams.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/98.png"); // cam 6 frame 1
+    neutral_cams.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/99.png"); // cam 6 frame 2
+    neutral_cams.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/100.png"); // cam 7 frame 1
+    neutral_cams.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 2
+    neutral_cams.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/102.png"); // cam 7 frame 3
+    neutral_cams.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 4 (yes, the same image as frame 2)
+    neutral_cams.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/112.png"); // cam 8 frame 1
+    neutral_cams.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 2
+    neutral_cams.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/114.png"); // cam 8 frame 3
+    neutral_cams.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 4 (yes, the same image as frame 2)
+    neutral_cams.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/115.png"); // cam 9
+    neutral_cams.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/116.png"); // cam 10
+    neutral_cams.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/623.png"); // cam 11 (vent)
+    neutral_cams.frames[20] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/624.png"); // cam 12 (vent)
+    neutral_cams.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/628.png"); // cam 13 (vent)
+    neutral_cams.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/824.png"); // cam 14 (vent)
+    neutral_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/818.png"); // cam 15 (vent) */
+
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
     return false;
 }
 
 void DrawWarpedScene(){
-    GRRLIB_Screen2Texture(0, 0, sceneTex, false);
     for(int sx = 0; sx < SCREEN_W; sx += STRIP_W){
         float u = (float)sx / SCREEN_W;
         float dist = powf(fabsf(u - 0.5f) * 2.0f, 2.0f);
@@ -147,30 +225,6 @@ void InitAllImg(){
     white_blip.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/152.png");
     white_blip.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/153.png");
     white_blip.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/154.png");
-    neutral_cams.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/106.png"); // cam 1 106
-    neutral_cams.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/97.png"); // cam 2 frame 1
-    neutral_cams.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/103.png"); // cam 2 frame 2
-    neutral_cams.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/104.png"); // cam 3
-    neutral_cams.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/105.png"); // cam 4
-    neutral_cams.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/109.png"); // cam 5 frame 1
-    neutral_cams.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/110.png"); // cam 5 frame 2
-    neutral_cams.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/98.png"); // cam 6 frame 1
-    neutral_cams.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/99.png"); // cam 6 frame 2
-    neutral_cams.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/100.png"); // cam 7 frame 1
-    neutral_cams.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 2
-    neutral_cams.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/102.png"); // cam 7 frame 3
-    neutral_cams.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 4 (yes, the same image as frame 2)
-    neutral_cams.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/112.png"); // cam 8 frame 1
-    neutral_cams.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 2
-    neutral_cams.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/114.png"); // cam 8 frame 3
-    neutral_cams.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 4 (yes, the same image as frame 2)
-    neutral_cams.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/115.png"); // cam 9
-    neutral_cams.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/116.png"); // cam 10
-    neutral_cams.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/623.png"); // cam 11 (vent)
-    neutral_cams.frames[20] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/624.png"); // cam 12 (vent)
-    neutral_cams.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/628.png"); // cam 13 (vent)
-    neutral_cams.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/824.png"); // cam 14 (vent)
-    neutral_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/818.png"); // cam 15 (vent)
     backdrop.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(1).png");
     backdrop.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/205(2).png");
     cursor = GRRLIB_LoadTexture(pointer_png);
@@ -180,47 +234,59 @@ void InitAllImg(){
     GRRLIB_InitTileSet(cursor, 32, 32, 32);
     GRRLIB_InitTileSet(font, 32, 36, 32);
 
-    springtrap_cams.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/295.png"); // cam 1
-    springtrap_cams.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/132.png"); // cam 2 frame 1
-    springtrap_cams.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/133.png"); // cam 2 frame 2
-    springtrap_cams.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/121.png"); // cam 3
-    springtrap_cams.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/122.png"); // cam 4
-    springtrap_cams.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/119.png"); // cam 5 frame 1
-    springtrap_cams.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/120.png"); // cam 5 frame 2
-    springtrap_cams.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/117.png"); // cam 6 frame 1
-    springtrap_cams.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/118.png"); // cam 6 frame 2
-    springtrap_cams.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/124.png"); // cam 7 frame 1
-    springtrap_cams.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/125.png"); // cam 7 frame 2
-    springtrap_cams.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/126.png"); // cam 7 frame 3
-    springtrap_cams.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/125.png"); // cam 7 frame 4 (yes, same as frame 2)
-    springtrap_cams.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/127.png"); // cam 8 frame 1
-    springtrap_cams.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/128.png"); // cam 8 frame 2
-    springtrap_cams.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/129.png"); // cam 8 frame 3
-    springtrap_cams.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/128.png"); // cam 8 frame 4 (yes, same as frame 2)
-    springtrap_cams.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/130.png"); // cam 9
-    springtrap_cams.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/131.png"); // cam 10
-    springtrap_cams.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/829.png"); // cam 11 (vent)
-    springtrap_cams.frames[20] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/831.png"); // cam 12 (vent)
-    springtrap_cams.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/835.png"); // cam 13 (vent)
-    springtrap_cams.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/841.png"); // cam 14 (vent)
-    springtrap_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/832.png"); // cam 15 (vent)
+    controlPanel.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/744.png");
+    controlPanel.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/743.png");
+    controlPanel.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/742.png");
+    controlPanel.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/741.png");
+    controlPanel.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/740.png");
+    controlPanel.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/739.png");
+    controlPanel.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/738.png");
+    controlPanel.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/737.png");
+    controlPanel.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/736.png");
+    controlPanel.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/735.png");
+    controlPanel.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/734.png");
 
-    //springtrap_jumpscare.frames[0] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/792.png");
-    //springtrap_jumpscare.frames[1] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/794.png");
-    //springtrap_jumpscare.frames[2] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/796.png");
-    //springtrap_jumpscare.frames[3] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/798.png");
-    //springtrap_jumpscare.frames[4] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/800.png");
-    //springtrap_jumpscare.frames[5] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/802.png");
-    //springtrap_jumpscare.frames[6] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/804.png");
-    //springtrap_jumpscare.frames[7] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/806.png");
-    //springtrap_jumpscare.frames[8] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/825.png");
-    //springtrap_jumpscare.frames[9] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/822.png");
-    //springtrap_jumpscare.frames[10] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/820.png");
-    //springtrap_jumpscare.frames[11] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/817.png");
-    //springtrap_jumpscare.frames[12] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/815.png");
-    //springtrap_jumpscare.frames[13] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/813.png");
-    //springtrap_jumpscare.frames[14] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/811.png");
-    //springtrap_jumpscare.frames[15] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/809.png");
+    springtrap_jumpscare.frames[0] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/792.png");
+    springtrap_jumpscare.frames[1] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/794.png");
+    springtrap_jumpscare.frames[2] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/796.png");
+    springtrap_jumpscare.frames[3] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/798.png");
+    springtrap_jumpscare.frames[4] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/800.png");
+    springtrap_jumpscare.frames[5] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/802.png");
+    springtrap_jumpscare.frames[6] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/804.png");
+    springtrap_jumpscare.frames[7] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/806.png");
+    springtrap_jumpscare.frames[8] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/825.png");
+    springtrap_jumpscare.frames[9] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/822.png");
+    springtrap_jumpscare.frames[10] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/820.png");
+    springtrap_jumpscare.frames[11] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/817.png");
+    springtrap_jumpscare.frames[12] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/815.png");
+    springtrap_jumpscare.frames[13] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/813.png");
+    springtrap_jumpscare.frames[14] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/811.png");
+    springtrap_jumpscare.frames[15] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/809.png");
+}
+
+void dcv(int v, bool mode){
+    static int oV = -1;
+    static bool oMode = 0;
+    int nV = v;
+    bool nMode = mode;
+    if(v == oV && mode == oMode) return;
+    if(mode == 0){
+        FreeAllImgAnim2(&neutral_cams);
+        if(v!=oV){FreeOneImgAnim2(&springtrap_cams, oV);}
+        if(!springtrap_cams.loaded[v]) {
+            springtrap_cams.frames[v] = GRRLIB_LoadTextureFromFile(sp_cams_arr[v]);
+            springtrap_cams.loaded[v] = true;
+        }
+    }else{
+        FreeAllImgAnim2(&springtrap_cams);
+        if(oV != v){FreeOneImgAnim2(&neutral_cams, oV);}
+        if(!neutral_cams.loaded[v]) {
+            neutral_cams.frames[v] = GRRLIB_LoadTextureFromFile(nt_cams_arr[v]);
+            neutral_cams.loaded[v] = true;
+        }
+    }
+    oV = nV;
+    oMode = nMode;
 }
 
 void drawCams(){
@@ -235,64 +301,91 @@ void drawCams(){
     static u8 cam6_f = 0;
     static u8 cam7_f = 0;
     static u8 cam8_f = 0;
-    if(camButton_alpha != 50) return;
+    if(camButton_alpha != 50){
+        FreeAllImgAnim2(&neutral_cams);
+        FreeAllImgAnim2(&springtrap_cams);
+        return;
+    };
+    u8 v = 0;
     switch (selected_cam)
     {
     case 2:
+        v = cam2_f + 1;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam2_f + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam2_f + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 5:
-        if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam5_f + 5], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam5_f + 5], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        v = cam5_f + 5;
+        if(selected_cam == mon_cam){          
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break; 
     case 6:
+        v = cam6_f + 7;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam6_f + 7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam6_f + 7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 7:
+        v = cam7_f + 9;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam7_f + 9], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam7_f + 9], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 8:
+        v = cam8_f + 13;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[cam8_f + 13], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[cam8_f + 13], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
         
     case 1:
+        v = 0;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 9:
+        v = 17;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 10:
+        v = 18;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 3:
+        v = selected_cam;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 4:
+        v = selected_cam;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     default:
+        v = selected_cam + 8;
         if(selected_cam == mon_cam){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[selected_cam + 8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for vents iirc
-        }else GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[selected_cam + 8], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            dcv(v, 0);
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for vents iirc
+        }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     }
     if(frame%25==0){
@@ -343,20 +436,6 @@ void drawFan(){
 }
 
 void drawControlPanel(){
-    if(!controlPanel.loaded){
-    controlPanel.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/744.png");
-    controlPanel.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/743.png");
-    controlPanel.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/742.png");
-    controlPanel.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/741.png");
-    controlPanel.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/740.png");
-    controlPanel.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/739.png");
-    controlPanel.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/738.png");
-    controlPanel.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/737.png");
-    controlPanel.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/736.png");
-    controlPanel.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/735.png");
-    controlPanel.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/734.png");
-    controlPanel.loaded = true;
-    }
     if(isControlPanelOpen == 1){
         canPan = false;
         GRRLIB_DrawImg(10, SCREEN_H - (controlPanel.frames[controlPanel_f]->h) + 5, controlPanel.frames[controlPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -383,10 +462,6 @@ void drawControlPanel(){
                 isControlPanelOpen = false;
                 ScreenOpen = false;
                 IsCurrentlyClosingPanel = false;
-                if(controlPanel.loaded){
-                    controlPanel.loaded = false;
-                    FreeImgAnim(&controlPanel);
-                }
             }
         }
     }
@@ -567,6 +642,8 @@ void drawCamLayout(){
             }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
             GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
         }
+        GRRLIB_DrawImg(268, 332, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
+        GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
     }
     else{ // for vent
         u16 x_l[5] = {363, 399, 454, 501, 529};
@@ -588,9 +665,7 @@ void drawCamLayout(){
         }
     }
 
-    GRRLIB_DrawImg(268, 332, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
     GRRLIB_DrawImg(268, 381, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
     GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2), CamLayoutNmb.frames[19], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // end big buttons
 }
 
@@ -605,7 +680,7 @@ void jumpscare(){
     canPan = false;
     static u8 sp_j = 0;
     GRRLIB_DrawImg(0, SCREEN_H - (springtrap_jumpscare.frames[sp_j]->h), springtrap_jumpscare.frames[sp_j], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    if(frame%20==0 && sp_j < 15){
+    if(frame%4==0 && sp_j < 15){
         sp_j++;
     }
     if(sp_j >= 15){
@@ -757,8 +832,9 @@ int gameSceneMain(){
         drawOffice();
         drawFan();
         if(!isJumpscare){
-            DrawWarpedScene(); //anything drew before this are getting warped
+            GRRLIB_Screen2Texture(0, 0, sceneTex, false);
         }
+        DrawWarpedScene(); //anything drew before this are getting warped
         drawPanelButton();
         drawControlPanel();
         drawCamPanel();
@@ -769,7 +845,10 @@ int gameSceneMain(){
         }
         drawCamLayout();
         drawCamButton();
-        sprintf(buffer, "%d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, springtrap_cams.frames[17] != NULL);
+        
+        sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
+
+        //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
@@ -880,8 +959,8 @@ int gameSceneMain(){
     FreeImgAnim(&triangle);
     FreeImgAnim(&CamStatic);
     FreeImgAnim(&white_blip);
-    FreeImgAnim(&neutral_cams);
-    FreeImgAnim(&springtrap_cams);
+    FreeAllImgAnim2(&neutral_cams);
+    FreeAllImgAnim2(&springtrap_cams);
     FreeImgAnim(&backdrop);
     FreeImgAnim(&springtrap_attack);
     FreeImgAnim(&springtrap_jumpscare);
