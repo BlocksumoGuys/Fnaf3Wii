@@ -27,6 +27,10 @@ bool isVentCamPressed = false;
 bool audioError = false;
 bool videoError = false;
 bool ventilationError = true;
+bool isRebootingCam = false;
+bool isRebootingAudio = false;
+bool isRebootingVent = false;
+bool isRebootingAll = false;
 bool isRebooting = false;
 u8 panelSelect = 0;
 float IR_Y;
@@ -56,6 +60,7 @@ IMG_Anim2 springtrap_cams = {0};
 IMG_Anim backdrop = {0};
 IMG_Anim springtrap_attack = {0};
 IMG_Anim springtrap_jumpscare = {0};
+IMG_Anim loadGreen = {0};
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -68,11 +73,13 @@ int mon_cam = 0;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 10}; // for last, 7 instead of 10
 int camHealth = 10;
 int ventHealth = 10;
+int audioHealth = 10;
 int camProgress = 0;
 int ventProgress = 0;
 int audioProgress = 0;
 int allProgress = 0;
-u8 CamErrorTimer = 0;
+u64 CamErrorTimer = 0;
+u64 VentErrorTimer = 0;
 bool MapLayoutNormalMode = false;
 
 int move_counter = 0; // for sprintrap ai
@@ -251,6 +258,12 @@ void InitAllImg(){
     springtrap_jumpscare.frames[13] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/813.png");
     springtrap_jumpscare.frames[14] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/811.png");
     springtrap_jumpscare.frames[15] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/809.png");
+
+    loadGreen.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/611.png"); // seal green bean
+    loadGreen.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/612.png");
+    loadGreen.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/629.png");
+    loadGreen.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
+    loadGreen.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
 }
 
 void dcv(int v, bool mode){
@@ -522,16 +535,17 @@ void drawPanelText(){
     if(IsCursorWithinImg(PanelCommands.frames[4], 85, 373)) {panelSelect = 3;}
     if(IsCursorWithinImg(PanelCommands.frames[5], 85, 404)) {panelSelect = 4;}
     if((frame/15)%2==0){
-        if(audioError){
+        if(audioError && !isRebootingAudio){
             GRRLIB_DrawImg(85+x_pad+180, 235+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
-        if(videoError){
+        if(videoError && !isRebootingCam){
             GRRLIB_DrawImg(85+x_pad+180, 273+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
-        if(ventilationError){
+        if(ventilationError && !isRebootingVent){
             GRRLIB_DrawImg(85+x_pad+180, 306+y_pad, PanelCommands.frames[7], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
     }
+    if(isRebooting) return;
     switch (panelSelect)
     {
     case 0:
@@ -624,11 +638,6 @@ void drawCamLayout(){
         CamLayoutNmb.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/609.png"); // vent sealed
         CamLayoutNmb.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/1139.png"); // seal instruction text
         CamLayoutNmb.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/1140.png"); // sealing text
-        CamLayoutNmb.frames[24] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/611.png"); // seal green bean
-        CamLayoutNmb.frames[25] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/612.png");
-        CamLayoutNmb.frames[26] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/629.png");
-        CamLayoutNmb.frames[27] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
-        CamLayoutNmb.frames[28] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
         CamLayoutNmb.loaded = true;
     }
     if(!camLayoutSelection){
@@ -687,7 +696,7 @@ void drawCamLayout(){
         GRRLIB_DrawImg(316, 193, CamLayoutNmb.frames[22 + isSealing], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
 
         if(isSealing){
-            GRRLIB_DrawImg(477, 434, CamLayoutNmb.frames[24 + seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            GRRLIB_DrawImg(477, 434, loadGreen.frames[seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
             if(frame%20==0){
                 seal_f = (seal_f+1) % 5;
             }
@@ -845,6 +854,60 @@ void sealVent(){
     vent_f++;
 }
 
+void reboot(){
+    int x_pad = 200;
+    if(isRebootingAudio){
+        GRRLIB_DrawImg(85+x_pad, 235, loadGreen.frames[seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // yes, using seal_f
+        if(audioProgress >= 10){
+            audioProgress = 0;
+            audioHealth = 10;
+            audioError = false;
+            isRebootingAudio = false;
+            isRebooting = false;
+        }
+    }
+    if(isRebootingCam){
+        GRRLIB_DrawImg(85+x_pad, 273, loadGreen.frames[seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(camProgress >= 10){
+            camProgress = 0;
+            camHealth = 10;
+            videoError = false;
+            isRebootingCam = false;
+            isRebooting = false;
+        }
+    }
+    if(isRebootingVent){
+        GRRLIB_DrawImg(85+x_pad, 306, loadGreen.frames[seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(ventProgress >= 10){
+            ventProgress = 0;
+            ventHealth = 10;
+            ventilationError = false;
+            isRebootingVent = false;
+            isRebooting = false;
+        }
+    }
+    if(isRebootingAll){
+        GRRLIB_DrawImg(85+x_pad, 373, loadGreen.frames[seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        if(allProgress >= 10){
+            allProgress = 0;
+            audioHealth = 10;
+            camHealth = 10;
+            ventHealth = 10;
+            audioError = false;
+            videoError = false;
+            ventilationError = false;
+            isRebootingAll = false;
+            isRebooting = false;
+        }
+    }
+    if(frame%20==0){
+        seal_f = (seal_f + 1) % 6;
+    }
+    if(!isRebooting){
+        seal_f = 0;
+    }
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -897,19 +960,47 @@ int gameSceneMain(){
         if(blip_f < 4){
             drawBlip();
         }
+        if(audioHealth <= 0){
+            audioError = true;
+        }
+        if(camHealth <= 0){
+            videoError = true;
+        }
+        if(ventHealth <= 0){
+            ventilationError = true;
+        }
+        if(isRebooting){
+            reboot();
+        }
         drawCamLayout();
         drawCamButton();
         
-        sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
-
+        //sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
+        //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
         //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
-        GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
+        //GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
                 if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){isControlPanelOpen = 1;}
             }
-            if(!PanelButtonVisible){
+            if(!PanelButtonVisible && !isRebooting){
                 if(panelSelect == 4){isControlPanelOpen = 2;}
+                if(panelSelect == 0) {
+                    isRebootingAudio = true;
+                    isRebooting = true;
+                }
+                if(panelSelect == 1) {
+                    isRebootingCam = true;
+                    isRebooting = true;
+                }
+                if(panelSelect == 2) {
+                    isRebootingVent = true;
+                    isRebooting = true;
+                }
+                if(panelSelect == 3) {
+                    isRebootingAll = true;
+                    isRebooting = true;
+                }
             }
             if(camButton_alpha == 100 && fabs(x + HALF_REGION) < 1.0f){
                 if(IsCursorWithinImg(camClick, 540, 73)){
@@ -972,10 +1063,18 @@ int gameSceneMain(){
             }
         }
         if(camButton_alpha == 50){ // for the cam health
-            CamErrorTimer++;
-            if(CamErrorTimer >= (60*12)){ // each 12 seconds, springtrap's AI level is deducted from the cam's health
-                camHealth -= Springtrap_AI[NIGHT - 1];
-                CamErrorTimer = 0;
+            if(!camLayoutSelection){
+                CamErrorTimer++;
+                if(CamErrorTimer >= (60*12)){ // each 12 seconds, springtrap's AI level is deducted from the cam's health
+                    camHealth -= Springtrap_AI[NIGHT - 1];
+                    CamErrorTimer = 0;
+                }
+            }else{
+                VentErrorTimer++;
+                if(NIGHT == 2 && VentErrorTimer >= (60*12)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
+                if(NIGHT == 3 && VentErrorTimer >= (60*10)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
+                if(NIGHT == 4 && VentErrorTimer >= (60*9)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
+                if(NIGHT == 5 && VentErrorTimer >= (60*8)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
             }
         }
         if(frame%60==0){ //global each second timer
@@ -986,7 +1085,21 @@ int gameSceneMain(){
                 CamStatic_alpha = 255;
                 AC_calc();
             }
+            if(isRebootingAudio){
+                audioProgress += (rand() % 4) + 1;
+            }
+            if(isRebootingCam){
+                camProgress += (rand() % 4) + 1;
+            }
+            if(isRebootingVent){
+                ventProgress += (rand() % 4) + 1;
+            }
             move_counter++;
+        }
+        if(frame%(60*2)==0){ // global each 2 seconds timer
+            if(isRebootingAll){
+                allProgress += (rand() % 4) + 1;
+            }
         }
         if(frame%(60*10)==0){ //global 10 second timer
             if(selected_cam != mon_cam){
@@ -1023,5 +1136,6 @@ int gameSceneMain(){
     FreeImgAnim(&backdrop);
     FreeImgAnim(&springtrap_attack);
     FreeImgAnim(&springtrap_jumpscare);
+    FreeImgAnim(&loadGreen);
     return 0;
 }
