@@ -1,8 +1,8 @@
 #pragma once
 
 #define IMG_SCALE 1
-#define MAX_FRAMES 25
-#define NIGHT 6
+#define MAX_FRAMES 30
+#define NIGHT 1
 #define DEBUG false
 
 #define WARNING_IMG "sd:/fnaf3/assets/images/329.png"

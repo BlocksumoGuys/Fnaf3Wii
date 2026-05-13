@@ -22,6 +22,8 @@ bool ScreenOpen = false;
 bool stage3scare = false;
 bool IsCurrentlyClosingPanel = false;
 bool isJumpscare = false;
+bool isSealing = false;
+bool isVentCamPressed = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -72,6 +74,8 @@ u8 total_turns = 0; // for springtrap ai
 
 u8 blackout_alpha = 0;
 u8 closed_vent = 0;
+u64 double_click_timer_vent = 0;
+u8 seal_f = 0;
 
 const char *sp_cams_arr[24] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -126,31 +130,6 @@ const char *nt_cams_arr[24] = {
     "sd:/fnaf3/assets/images/824.png",
     "sd:/fnaf3/assets/images/818.png",
 };
-
-    /*neutral_cams.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/106.png"); // cam 1 106
-    neutral_cams.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/97.png"); // cam 2 frame 1
-    neutral_cams.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/103.png"); // cam 2 frame 2
-    neutral_cams.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/104.png"); // cam 3
-    neutral_cams.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/105.png"); // cam 4
-    neutral_cams.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/109.png"); // cam 5 frame 1
-    neutral_cams.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/110.png"); // cam 5 frame 2
-    neutral_cams.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/98.png"); // cam 6 frame 1
-    neutral_cams.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/99.png"); // cam 6 frame 2
-    neutral_cams.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/100.png"); // cam 7 frame 1
-    neutral_cams.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 2
-    neutral_cams.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/102.png"); // cam 7 frame 3
-    neutral_cams.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/101.png"); // cam 7 frame 4 (yes, the same image as frame 2)
-    neutral_cams.frames[13] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/112.png"); // cam 8 frame 1
-    neutral_cams.frames[14] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 2
-    neutral_cams.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/114.png"); // cam 8 frame 3
-    neutral_cams.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/113.png"); // cam 8 frame 4 (yes, the same image as frame 2)
-    neutral_cams.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/115.png"); // cam 9
-    neutral_cams.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/116.png"); // cam 10
-    neutral_cams.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/623.png"); // cam 11 (vent)
-    neutral_cams.frames[20] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/624.png"); // cam 12 (vent)
-    neutral_cams.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/628.png"); // cam 13 (vent)
-    neutral_cams.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/824.png"); // cam 14 (vent)
-    neutral_cams.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/818.png"); // cam 15 (vent) */
 
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
     if(ir.x >= x && ir.x <= x + img->w && IR_Y >= y && IR_Y <= y + img->h){return true;}
@@ -272,14 +251,12 @@ void dcv(int v, bool mode){
     if(v == oV && mode == oMode) return;
     if(mode == 0){
         FreeAllImgAnim2(&neutral_cams);
-        if(v!=oV){FreeOneImgAnim2(&springtrap_cams, oV);}
         if(!springtrap_cams.loaded[v]) {
             springtrap_cams.frames[v] = GRRLIB_LoadTextureFromFile(sp_cams_arr[v]);
             springtrap_cams.loaded[v] = true;
         }
     }else{
         FreeAllImgAnim2(&springtrap_cams);
-        if(oV != v){FreeOneImgAnim2(&neutral_cams, oV);}
         if(!neutral_cams.loaded[v]) {
             neutral_cams.frames[v] = GRRLIB_LoadTextureFromFile(nt_cams_arr[v]);
             neutral_cams.loaded[v] = true;
@@ -615,6 +592,15 @@ void drawCamLayout(){
         CamLayoutNmb.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/426.png"); // big grey boxes
         CamLayoutNmb.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/366.png"); // play audio text
         CamLayoutNmb.frames[19] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/431.png"); // map toggle text
+        CamLayoutNmb.frames[20] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/531.png"); // vent normal
+        CamLayoutNmb.frames[21] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/609.png"); // vent sealed
+        CamLayoutNmb.frames[22] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/1139.png"); // seal instruction text
+        CamLayoutNmb.frames[23] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/1140.png"); // sealing text
+        CamLayoutNmb.frames[24] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/611.png"); // seal green bean
+        CamLayoutNmb.frames[25] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/612.png");
+        CamLayoutNmb.frames[26] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/629.png");
+        CamLayoutNmb.frames[27] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
+        CamLayoutNmb.frames[28] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
         CamLayoutNmb.loaded = true;
     }
     if(!camLayoutSelection){
@@ -663,6 +649,21 @@ void drawCamLayout(){
             }else GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
             GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[i+11]->w/2), y_l[i] + (CamLayoutNmb.frames[i+11]->h/2), CamLayoutNmb.frames[i + 11], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
+        
+        GRRLIB_DrawImg(350, 281, CamLayoutNmb.frames[20 + (closed_vent == 11)], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for closable vent cam 11
+        GRRLIB_DrawImg(369, 328, CamLayoutNmb.frames[20 + (closed_vent == 12)], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for closable vent cam 12
+        GRRLIB_DrawImg(426, 361, CamLayoutNmb.frames[20 + (closed_vent == 13)], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for closable vent cam 13
+        GRRLIB_DrawImg(495, 406, CamLayoutNmb.frames[20 + (closed_vent == 15)], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for closable vent cam 15
+        GRRLIB_DrawImg(543, 346, CamLayoutNmb.frames[20 + (closed_vent == 14)], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for closable vent cam 14
+
+        GRRLIB_DrawImg(316, 193, CamLayoutNmb.frames[22 + isSealing], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+
+        if(isSealing){
+            GRRLIB_DrawImg(477, 434, CamLayoutNmb.frames[24 + seal_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            if(frame%20==0){
+                seal_f = (seal_f+1) % 5;
+            }
+        }else{seal_f = 0;}
     }
 
     GRRLIB_DrawImg(268, 381, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -789,6 +790,7 @@ void Stage1_2(){
     }
     if(attack_stage == 2){
         GRRLIB_DrawImg(x+HALF_REGION+200 - (springtrap_f*26), 0, springtrap_attack.frames[springtrap_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        time_am = 6;
         if(frame%2==0 && springtrap_f < 16){
             springtrap_f++;
         }
@@ -799,6 +801,22 @@ void Stage1_2(){
     //}
 }
 
+void sealVent(){
+    static int vent_g = 1000;
+    static int vent_f = 0;
+    int r = (rand() % 49) + 50;
+    if(vent_f >= vent_g){
+        closed_vent = selected_cam;
+        vent_g = 1000;
+        vent_f = 0;
+        isSealing = false;
+    }
+    
+    if(vent_g == 1000){
+        vent_g = r;
+    }
+    vent_f++;
+}
 
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
@@ -840,6 +858,9 @@ int gameSceneMain(){
         drawCamPanel();
         drawCams();
         drawCamStatic();
+        if(isSealing){
+            sealVent();
+        }
         if(blip_f < 4){
             drawBlip();
         }
@@ -877,12 +898,16 @@ int gameSceneMain(){
                     } 
                 }
                 for(int i = 0; i < 5; i++){
-                    if(camLayoutSelection == 1){
+                    if(camLayoutSelection == 1 && !isSealing){
                         if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i + 10], y_l[i + 10]) && buttonCamDelay >= 20){
-                            selected_cam = i + 11;
                             blip_f = 0;
                             CamStatic_alpha = 255;
                             buttonCamDelay = 0;
+                            if(double_click_timer_vent < 60 && !isSealing && selected_cam == (i+11)){
+                                isSealing = true;
+                            }
+                            selected_cam = i + 11;
+                            double_click_timer_vent = 0;
                         }  
                     }                 
                 }
@@ -923,7 +948,7 @@ int gameSceneMain(){
         if(frame%60==0){ //global each second timer
             MapLayoutNormalMode = !MapLayoutNormalMode;
             if(move_counter>(10 - Springtrap_AI[NIGHT-1] - aggresive)+((rand()%16)-total_turns)){ // ai blabla
-                action_selected = rand() % (3 + aggresive + 2);
+                action_selected = rand() % (3 + aggresive + 1);
                 move_counter = 0;
                 CamStatic_alpha = 255;
                 AC_calc();
@@ -944,6 +969,7 @@ int gameSceneMain(){
         GRRLIB_Render();
         frame++;
         buttonCamDelay++;
+        double_click_timer_vent++;
     }
     GRRLIB_FreeTexture(panelClick);
     GRRLIB_FreeTexture(camClick);
