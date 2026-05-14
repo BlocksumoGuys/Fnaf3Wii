@@ -289,24 +289,25 @@ void InitAllImg(){
 }
 
 void dcv(int v, bool mode){
-    static int oV = -1;
-    static bool oMode = 0;
-    if(v == oV && mode == oMode) return;;
-    if(mode == 0){
-        if(oMode != mode) FreeAllImgAnim2(&neutral_cams);
-        if(!springtrap_cams.loaded[v]) {
-            springtrap_cams.frames[v] = GRRLIB_LoadTextureFromFile(sp_cams_arr[v]);
-            springtrap_cams.loaded[v] = true;
-        }
-    }else{
-        if(oMode != mode) FreeAllImgAnim2(&springtrap_cams);;
-        if(!neutral_cams.loaded[v]) {
-            neutral_cams.frames[v] = GRRLIB_LoadTextureFromFile(nt_cams_arr[v]);
-            neutral_cams.loaded[v] = true;
-        }
+    static int cur_v = -1;
+    static bool cur_mode = -1;
+
+    IMG_Anim2* set = mode ? &neutral_cams : &springtrap_cams;
+    const char** src = mode ? nt_cams_arr : sp_cams_arr;
+
+    if(v < 0 || v >= MAX_FRAMES) return;
+
+    if(cur_v != v || cur_mode != mode){
+        FreeAllImgAnim2(&springtrap_cams);
+        FreeAllImgAnim2(&neutral_cams);
+        cur_v = v;
+        cur_mode = mode;
     }
-    oV = v;
-    oMode = mode;
+
+    if(!set->frames[v]){
+        set->frames[v] = GRRLIB_LoadTextureFromFile(src[v]);
+        set->loaded[v] = (set->frames[v] != NULL);
+    }
 }
 
 void drawCams(){
@@ -604,12 +605,8 @@ void drawCamPanel(){
             }else{camButton_alpha = 50; ScreenOpen = true;}
         }
     }else{
-        if(neutral_cams.loaded[4]){
-            FreeAllImgAnim2(&neutral_cams);
-        }
-        if(springtrap_cams.loaded[4]){
-            FreeAllImgAnim2(&springtrap_cams);
-        }
+        FreeAllImgAnim2(&neutral_cams);
+        FreeAllImgAnim2(&springtrap_cams);
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
             if(CamPanel_f > 0){
@@ -1054,7 +1051,7 @@ int gameSceneMain(){
         drawCamLayout();
         drawCamButton();
         
-        sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, neutral_cams.frames[0] == NULL);
+        sprintf(buffer, "%d, %d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, neutral_cams.frames[0] == NULL, neutral_cams.loaded[0]);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
         //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
         //sprintf(buffer, "%d", selected_cam == BBSpawn);
