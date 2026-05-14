@@ -26,12 +26,14 @@ bool isSealing = false;
 bool isVentCamPressed = false;
 bool audioError = false;
 bool videoError = false;
-bool ventilationError = true;
+bool ventilationError = false;
 bool isRebootingCam = false;
 bool isRebootingAudio = false;
 bool isRebootingVent = false;
 bool isRebootingAll = false;
 bool isRebooting = false;
+bool IsBBJumpscaring = false;
+bool hasBBSpawned = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -61,6 +63,7 @@ IMG_Anim backdrop = {0};
 IMG_Anim springtrap_attack = {0};
 IMG_Anim springtrap_jumpscare = {0};
 IMG_Anim loadGreen = {0};
+IMG_Anim BB = {0};
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -71,6 +74,7 @@ u8 selected_cam = 2;
 u8 picrandom;
 int mon_cam = 0;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 10}; // for last, 7 instead of 10
+const u8 BB_Ai[6] = {90, 80, 70, 60, 50};
 int camHealth = 10;
 int ventHealth = 10;
 int audioHealth = 10;
@@ -92,6 +96,9 @@ u8 blackout_alpha = 0;
 u8 closed_vent = 0;
 u64 double_click_timer_vent = 0;
 u8 seal_f = 0;
+int BBSpawn = -1;
+u64 BBcounter = 0;
+u8 BBAlpha = 255;
 
 const char *sp_cams_arr[24] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -264,6 +271,20 @@ void InitAllImg(){
     loadGreen.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/629.png");
     loadGreen.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
     loadGreen.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
+
+    BB.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/70.png"); // bb on cam
+    BB.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/67.png"); // in ofice idle
+    BB.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/328.png"); // jumpscare
+    BB.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/338.png");
+    BB.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/341.png");
+    BB.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/344.png");
+    BB.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/349.png");
+    BB.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/342.png");
+    BB.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/343.png");
+    BB.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/345.png");
+    BB.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/347.png");
+    BB.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/667.png"); // jumpscare (also white flash)
+    BB.loaded = true;
 }
 
 void dcv(int v, bool mode){
@@ -302,8 +323,8 @@ void drawCams(){
     static u8 cam7_f = 0;
     static u8 cam8_f = 0;
     if(camButton_alpha != 50){
-        FreeAllImgAnim2(&neutral_cams);
-        FreeAllImgAnim2(&springtrap_cams);
+        //FreeAllImgAnim2(&neutral_cams);
+        //FreeAllImgAnim2(&springtrap_cams);
         return;
     };
     u8 v = 0;
@@ -388,6 +409,7 @@ void drawCams(){
         }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     }
+    //GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); for BB
     if(frame%25==0){
         cam2_f = (cam2_f + 1) % 2;
     }
@@ -575,7 +597,7 @@ void drawCamButton(){
 }
 
 void drawCamPanel(){
-    if(isCamOpen){
+    if(isCamOpen && !isJumpscare && !IsBBJumpscaring){
         CamPanel_alpha = 255;
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
@@ -908,6 +930,50 @@ void reboot(){
     }
 }
 
+void BB_calc(){
+    if(selected_cam != BBSpawn){
+        if(BBcounter > 0){
+            BBcounter = 0;
+            BBSpawn = -1;
+        }
+        return;
+    }
+    static u8 bb_f = 1;
+    if(BBcounter >= BB_Ai[NIGHT-1]){
+        //BBcounter = 0;
+        //time_am = 6;
+        IsBBJumpscaring = true;
+        isCamOpen = false;
+    }
+    if(IsBBJumpscaring){
+        int y_pad = 40;
+        int x_pad = 100;
+        if(camButton_alpha != 100){
+            GRRLIB_DrawImg(0 + x_pad, SCREEN_H - (BB.frames[bb_f]->h) + y_pad, BB.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }else{
+            if(bb_f == 1){
+                GRRLIB_DrawImg(0 + x_pad, SCREEN_H - (BB.frames[bb_f]->h) + y_pad, BB.frames[bb_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            }else{GRRLIB_DrawImg(0, SCREEN_H - (BB.frames[bb_f]->h), BB.frames[bb_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + BBAlpha);}
+            if(frame%3==0 && bb_f < 11){
+                bb_f++;
+            }
+            if(bb_f >= 11){
+                if(BBAlpha > 0){
+                    BBAlpha-=5;
+                }else{
+                    BBcounter = 0;
+                    BBSpawn = -1;
+                    IsBBJumpscaring = false;
+                    ventHealth = 0;
+                    ventilationError = true;
+                    hasBBSpawned = true;
+                }
+            }
+        }
+    }
+    if(selected_cam == BBSpawn){BBcounter++;}
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -922,6 +988,7 @@ int gameSceneMain(){
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
     picrandom = rand()%2;
+    BBSpawn = 7;
     if(NIGHT!=1){
         mon_cam = (rand() % 5) + 6;
     }
@@ -934,11 +1001,17 @@ int gameSceneMain(){
         mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir);
         IR_Y = ir.y * (480.0f / 460.0f);
-        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1){
+        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring){
             canPan = false;
         }
-        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1){
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring){
             canPan = true;
+        }
+        if(hasBBSpawned){
+            if(BB.loaded){
+                BB.loaded = false;
+                FreeImgAnim(&BB);
+            }
         }
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
@@ -951,8 +1024,12 @@ int gameSceneMain(){
         DrawWarpedScene(); //anything drew before this are getting warped
         drawPanelButton();
         drawControlPanel();
+        BB_calc();
         drawCamPanel();
         drawCams();
+        if(selected_cam == BBSpawn && isCamOpen){
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
         drawCamStatic();
         if(isSealing){
             sealVent();
@@ -977,8 +1054,8 @@ int gameSceneMain(){
         
         //sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
-        //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
-        //GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
+        sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
+        GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
                 if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){isControlPanelOpen = 1;}
@@ -1096,7 +1173,7 @@ int gameSceneMain(){
             }
             move_counter++;
         }
-        if(frame%(60*2)==0){ // global each 2 seconds timer
+        if(frame%(60*2)==0){ // global 2 seconds timer
             if(isRebootingAll){
                 allProgress += (rand() % 4) + 1;
             }
@@ -1104,6 +1181,12 @@ int gameSceneMain(){
         if(frame%(60*10)==0){ //global 10 second timer
             if(selected_cam != mon_cam){
                 picrandom = rand()%3; // idk what is this used for  but ig
+            }
+        }
+        if(frame%(60*20)==0){ // global 20 second timer
+            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6){
+                u8 bb_cams[4] = {1, 7, 9, 10};
+                BBSpawn = bb_cams[(rand() % 4)];
             }
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
@@ -1137,5 +1220,6 @@ int gameSceneMain(){
     FreeImgAnim(&springtrap_attack);
     FreeImgAnim(&springtrap_jumpscare);
     FreeImgAnim(&loadGreen);
+    FreeImgAnim(&BB);
     return 0;
 }
