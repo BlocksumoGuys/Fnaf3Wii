@@ -73,8 +73,8 @@ u8 camButton_alpha = 100;
 u8 selected_cam = 2;
 u8 picrandom;
 int mon_cam = 0;
-const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 10}; // for last, 7 instead of 10
-const u8 BB_Ai[6] = {90, 80, 70, 60, 50};
+const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7}; // for last, 7 instead of 10
+const u8 BB_Ai[6] = {90, 80, 70, 60, 120}; // 50 for lasr
 int camHealth = 10;
 int ventHealth = 10;
 int audioHealth = 10;
@@ -99,6 +99,7 @@ u8 seal_f = 0;
 int BBSpawn = -1;
 u64 BBcounter = 0;
 u8 BBAlpha = 255;
+u64 OfficeIdle = 0;
 
 const char *sp_cams_arr[24] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -290,24 +291,22 @@ void InitAllImg(){
 void dcv(int v, bool mode){
     static int oV = -1;
     static bool oMode = 0;
-    int nV = v;
-    bool nMode = mode;
-    if(v == oV && mode == oMode) return;
+    if(v == oV && mode == oMode) return;;
     if(mode == 0){
-        FreeAllImgAnim2(&neutral_cams);
+        if(oMode != mode) FreeAllImgAnim2(&neutral_cams);
         if(!springtrap_cams.loaded[v]) {
             springtrap_cams.frames[v] = GRRLIB_LoadTextureFromFile(sp_cams_arr[v]);
             springtrap_cams.loaded[v] = true;
         }
     }else{
-        FreeAllImgAnim2(&springtrap_cams);
+        if(oMode != mode) FreeAllImgAnim2(&springtrap_cams);;
         if(!neutral_cams.loaded[v]) {
             neutral_cams.frames[v] = GRRLIB_LoadTextureFromFile(nt_cams_arr[v]);
             neutral_cams.loaded[v] = true;
         }
     }
-    oV = nV;
-    oMode = nMode;
+    oV = v;
+    oMode = mode;
 }
 
 void drawCams(){
@@ -323,8 +322,6 @@ void drawCams(){
     static u8 cam7_f = 0;
     static u8 cam8_f = 0;
     if(camButton_alpha != 50){
-        //FreeAllImgAnim2(&neutral_cams);
-        //FreeAllImgAnim2(&springtrap_cams);
         return;
     };
     u8 v = 0;
@@ -606,7 +603,13 @@ void drawCamPanel(){
                 camButton_alpha = 99;
             }else{camButton_alpha = 50; ScreenOpen = true;}
         }
-    }else{       
+    }else{
+        if(neutral_cams.loaded[4]){
+            FreeAllImgAnim2(&neutral_cams);
+        }
+        if(springtrap_cams.loaded[4]){
+            FreeAllImgAnim2(&springtrap_cams);
+        }
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
             if(CamPanel_f > 0){
@@ -735,7 +738,7 @@ void drawBackdrop(){
 }
 
 void jumpscare(){
-    if(camButton_alpha == 50){isCamOpen = !isCamOpen;}
+    if(camButton_alpha == 50){isCamOpen = false;}
     isControlPanelOpen = 2;
     static u8 sp_j = 0;
     GRRLIB_DrawImg(0, SCREEN_H - (springtrap_jumpscare.frames[sp_j]->h), springtrap_jumpscare.frames[sp_j], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -988,7 +991,6 @@ int gameSceneMain(){
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
     picrandom = rand()%2;
-    BBSpawn = 7;
     if(NIGHT!=1){
         mon_cam = (rand() % 5) + 6;
     }
@@ -1052,9 +1054,10 @@ int gameSceneMain(){
         drawCamLayout();
         drawCamButton();
         
-        //sprintf(buffer, "%d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns);
+        sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, neutral_cams.frames[0] == NULL);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
-        sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
+        //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
+        //sprintf(buffer, "%d", selected_cam == BBSpawn);
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
@@ -1178,16 +1181,23 @@ int gameSceneMain(){
                 allProgress += (rand() % 4) + 1;
             }
         }
-        if(frame%(60*10)==0){ //global 10 second timer
+        if(frame%(60*10)==0){ //global 10 seconds timer
             if(selected_cam != mon_cam){
                 picrandom = rand()%3; // idk what is this used for  but ig
             }
         }
-        if(frame%(60*20)==0){ // global 20 second timer
-            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6){
+        if(ScreenOpen == false){
+            OfficeIdle++;
+        }
+        if(OfficeIdle%(60*20)==0){ // global office 20 seconds timer
+            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1){
                 u8 bb_cams[4] = {1, 7, 9, 10};
                 BBSpawn = bb_cams[(rand() % 4)];
             }
+        }
+        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1){ // force spawn bb at 3 am
+            u8 bb_cams[4] = {1, 7, 9, 10};
+            BBSpawn = bb_cams[(rand() % 4)];
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am >= 4){
