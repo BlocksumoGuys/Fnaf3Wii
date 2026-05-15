@@ -74,7 +74,7 @@ u8 selected_cam = 2;
 u8 picrandom;
 int mon_cam = 0;
 const u8 Springtrap_AI[6] = {0, 2, 3, 4, 5, 7}; // for last, 7 instead of 10
-const u8 BB_Ai[6] = {90, 80, 70, 60, 120}; // 50 for lasr
+const u8 BB_Ai[6] = {100, 90, 80, 70, 60, 50};
 int camHealth = 10;
 int ventHealth = 10;
 int audioHealth = 10;
@@ -99,7 +99,6 @@ u8 seal_f = 0;
 int BBSpawn = -1;
 u64 BBcounter = 0;
 u8 BBAlpha = 255;
-u64 OfficeIdle = 0;
 
 const char *sp_cams_arr[24] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -843,6 +842,7 @@ void Stage1_2(){
         springtrap_attack.frames[15] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/224.png");
         springtrap_attack.frames[16] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/244.png"); // stage 2
         springtrap_attack.frames[17] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/519.png"); // stage 3
+        springtrap_attack.frames[18] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/529.png"); // stage 4
         springtrap_attack.loaded = true;
     }
     if(attack_stage == 1){
@@ -854,6 +854,9 @@ void Stage1_2(){
         if(frame%2==0 && springtrap_f < 16){
             springtrap_f++;
         }
+    }
+    if(attack_stage == 4 && !isJumpscare){
+        GRRLIB_DrawImg(x+80, 85, springtrap_attack.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     }
     //GRRLIB_DrawImg(x+HALF_REGION+200, 40, springtrap_cams.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     //if(attack_stage == 3 && IsCurrentlyClosingPanel){
@@ -1185,16 +1188,13 @@ int gameSceneMain(){
                 picrandom = rand()%3; // idk what is this used for  but ig
             }
         }
-        if(ScreenOpen == false){
-            OfficeIdle++;
-        }
-        if(OfficeIdle%(60*20)==0){ // global office 20 seconds timer
-            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1 && !videoError){
+        if(frame%(60*20)==0){ // global office 20 seconds timer
+            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1 && !videoError && !ScreenOpen){ // BB has an AI in 10 chance to spawn ever 20 seconds if you are in the office
                 u8 bb_cams[4] = {1, 7, 9, 10};
                 BBSpawn = bb_cams[(rand() % 4)];
             }
         }
-        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError){ // force spawn bb at 3 am
+        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError && !isCamOpen){ // force spawn bb at 3 am
             u8 bb_cams[4] = {1, 7, 9, 10};
             BBSpawn = bb_cams[(rand() % 4)];
         }
