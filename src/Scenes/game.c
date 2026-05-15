@@ -289,18 +289,20 @@ void InitAllImg(){
 }
 
 void dcv(int v, bool mode){
-    static int cur_v = -1;
+    static int cur_cam = -1;
     static bool cur_mode = -1;
 
     IMG_Anim2* set = mode ? &neutral_cams : &springtrap_cams;
     const char** src = mode ? nt_cams_arr : sp_cams_arr;
 
     if(v < 0 || v >= MAX_FRAMES) return;
+    int cam_id = selected_cam;
 
-    if(cur_v != v || cur_mode != mode){
+    if(cur_cam != cam_id || cur_mode != mode){
         FreeAllImgAnim2(&springtrap_cams);
         FreeAllImgAnim2(&neutral_cams);
-        cur_v = v;
+
+        cur_cam = cam_id;
         cur_mode = mode;
     }
 
@@ -322,7 +324,7 @@ void drawCams(){
     static u8 cam6_f = 0;
     static u8 cam7_f = 0;
     static u8 cam8_f = 0;
-    if(camButton_alpha != 50){
+    if(camButton_alpha != 50 || videoError){
         return;
     };
     u8 v = 0;
@@ -791,7 +793,7 @@ void AC_calc(){ // yes, rewriting everything
         if(mon_cam == 6) {mon_cam = 5; action_selected = 0;}
         if(mon_cam == 4) {mon_cam = 3; action_selected = 0;}
         if(mon_cam == 3) {mon_cam = 0; attack_stage = 1; action_selected = 0;}
-        if(attack_stage == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 2; action_selected = 0;} // ScreenOpen here is used as replacement as the r value of the red ball, might break idk
+        if(attack_stage == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 2; action_selected = 0; return;} // ScreenOpen here is used as replacement as the r value of the red ball, might break idk
         if(attack_stage == 2) {mon_cam = 0; attack_stage = 3; action_selected = 0;}
         if(attack_stage == 3 && ScreenOpen) {mon_cam = 0; attack_stage = 4; action_selected = 0;}
         if(mon_cam == 1 && ScreenOpen) {mon_cam = 0; attack_stage = 4; action_selected = 0;}
@@ -848,7 +850,7 @@ void Stage1_2(){
     }
     if(attack_stage == 2){
         GRRLIB_DrawImg(x+HALF_REGION+200 - (springtrap_f*26), 0, springtrap_attack.frames[springtrap_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        time_am = 6;
+        //time_am = 6;
         if(frame%2==0 && springtrap_f < 16){
             springtrap_f++;
         }
@@ -1026,7 +1028,7 @@ int gameSceneMain(){
         BB_calc();
         drawCamPanel();
         drawCams();
-        if(selected_cam == BBSpawn && isCamOpen){
+        if(selected_cam == BBSpawn && isCamOpen && !videoError){
             GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
         drawCamStatic();
@@ -1187,12 +1189,12 @@ int gameSceneMain(){
             OfficeIdle++;
         }
         if(OfficeIdle%(60*20)==0){ // global office 20 seconds timer
-            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1){
+            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1 && !videoError){
                 u8 bb_cams[4] = {1, 7, 9, 10};
                 BBSpawn = bb_cams[(rand() % 4)];
             }
         }
-        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1){ // force spawn bb at 3 am
+        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError){ // force spawn bb at 3 am
             u8 bb_cams[4] = {1, 7, 9, 10};
             BBSpawn = bb_cams[(rand() % 4)];
         }
