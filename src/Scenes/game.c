@@ -34,6 +34,9 @@ bool isRebootingAll = false;
 bool isRebooting = false;
 bool IsBBJumpscaring = false;
 bool hasBBSpawned = false;
+bool hasMangleSpawned = false;
+bool hasMangleJumspcared = false;
+bool canMangleSpawn = true;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -69,6 +72,7 @@ GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
 GRRLIB_texImg *sceneTex = NULL;
+GRRLIB_texImg *mangle = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
 u8 picrandom;
@@ -98,9 +102,11 @@ u64 double_click_timer_vent = 0;
 u8 seal_f = 0;
 int BBSpawn = -1;
 u64 BBcounter = 0;
+u64 MangleCounter = 0;
+u64 MangleJumspcareCounter = 0;
 u8 BBAlpha = 255;
 
-const char *sp_cams_arr[24] = {
+const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/295.png",
     "sd:/fnaf3/assets/images/132.png",
     "sd:/fnaf3/assets/images/133.png",
@@ -124,10 +130,11 @@ const char *sp_cams_arr[24] = {
     "sd:/fnaf3/assets/images/831.png",
     "sd:/fnaf3/assets/images/835.png",
     "sd:/fnaf3/assets/images/841.png",
-    "sd:/fnaf3/assets/images/832.png"
+    "sd:/fnaf3/assets/images/832.png",
+    "sd:/fnaf3/assets/images/38.png" // mangle
 };
 
-const char *nt_cams_arr[24] = {
+const char *nt_cams_arr[25] = {
     "sd:/fnaf3/assets/images/106.png", // 106
     "sd:/fnaf3/assets/images/97.png", // 97
     "sd:/fnaf3/assets/images/103.png", // 103
@@ -152,6 +159,7 @@ const char *nt_cams_arr[24] = {
     "sd:/fnaf3/assets/images/628.png",
     "sd:/fnaf3/assets/images/824.png",
     "sd:/fnaf3/assets/images/818.png",
+    "sd:/fnaf3/assets/images/38.png" // mangle
 };
 
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
@@ -285,6 +293,8 @@ void InitAllImg(){
     BB.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/347.png");
     BB.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/667.png"); // jumpscare (also white flash)
     BB.loaded = true;
+
+    mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
 }
 
 void dcv(int v, bool mode){
@@ -394,7 +404,9 @@ void drawCams(){
         }else {dcv(v, 1); GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, neutral_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
         break;
     case 4:
-        v = selected_cam;
+        if(hasMangleSpawned){
+            v = 24;
+        }else{v = selected_cam;}
         if(selected_cam == mon_cam){
             dcv(v, 0);
             GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for non-anims
@@ -979,6 +991,40 @@ void BB_calc(){
     if(selected_cam == BBSpawn){BBcounter++;}
 }
 
+void Mangle_calc(){
+    //GRRLIB_DrawImg(x+HALF_REGION, 190, GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/202.png"), 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    static int mangle_y = 250;
+    if((selected_cam != 4 || !isCamOpen) && hasMangleSpawned){
+        if(MangleCounter > 0){
+            MangleCounter = 0;
+            hasMangleSpawned = false;
+            mangle_y = 250;
+        }
+        return;
+    }
+    if(MangleCounter >= BB_Ai[NIGHT-1] && !hasMangleJumspcared){
+        canMangleSpawn = false;
+        hasMangleJumspcared = true;
+        hasMangleSpawned = false;
+        isCamOpen = false;
+    }
+    if(hasMangleJumspcared){
+        if(mangle_y > 190 && frame%2==0){
+            mangle_y--;
+        }
+        MangleJumspcareCounter++;
+        GRRLIB_DrawImg(x+HALF_REGION, mangle_y, mangle, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    }
+    if(MangleJumspcareCounter >= (60*10)){
+        hasMangleSpawned = false;
+        MangleCounter = 0;
+        if(mangle_y < 250){
+            mangle_y++;
+        }else{MangleJumspcareCounter = 0; hasMangleJumspcared = false; audioHealth = 0; MangleCounter = 0; GRRLIB_FreeTexture(mangle);}
+    }
+    if(selected_cam == 4 && hasMangleSpawned && isCamOpen){MangleCounter++;}
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -1020,6 +1066,7 @@ int gameSceneMain(){
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
         Stage1_2();
+        Mangle_calc();
         drawOffice();
         drawFan();
         if(!isJumpscare){
@@ -1189,14 +1236,20 @@ int gameSceneMain(){
             }
         }
         if(frame%(60*20)==0){ // global office 20 seconds timer
-            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1 && !videoError && !ScreenOpen){ // BB has an AI in 10 chance to spawn ever 20 seconds if you are in the office
+            if(!hasBBSpawned && ((rand() % 11) + 1) <= Springtrap_AI[NIGHT-1] && time_am >= 1 && time_am < 6 && BBSpawn == -1 && !videoError && !ScreenOpen && NIGHT != 1){ // BB has an AI in 10 chance to spawn ever 20 seconds if you are in the office
                 u8 bb_cams[4] = {1, 7, 9, 10};
                 BBSpawn = bb_cams[(rand() % 4)];
             }
+            if(canMangleSpawn && ((rand()%8)+1) <= Springtrap_AI[NIGHT-1] && NIGHT!=1 && !videoError && time_am != 12){
+                hasMangleSpawned = true;
+            }
         }
-        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError && !isCamOpen){ // force spawn bb at 3 am
+        if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError && !isCamOpen && NIGHT!=1){ // force spawn bb at 3 am
             u8 bb_cams[4] = {1, 7, 9, 10};
             BBSpawn = bb_cams[(rand() % 4)];
+        }
+        if(time_am == 5 && canMangleSpawn && !videoError && NIGHT!=1){ // force spawn mangle at 5 am
+            hasMangleSpawned = true;
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am >= 4){
@@ -1230,5 +1283,6 @@ int gameSceneMain(){
     FreeImgAnim(&springtrap_jumpscare);
     FreeImgAnim(&loadGreen);
     FreeImgAnim(&BB);
+    GRRLIB_FreeTexture(mangle);
     return 0;
 }
