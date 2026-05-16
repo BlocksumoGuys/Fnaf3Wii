@@ -8,6 +8,7 @@
 #define CONTROL_PANEL_X 266
 #define CONTROL_PANEL_Y 453
 #define STRIP_W 4
+char buffer[100];
 float x = 0;
 float tx = 0.0f;
 ir_t ir;
@@ -37,6 +38,10 @@ bool hasBBSpawned = false;
 bool hasMangleSpawned = false;
 bool hasMangleJumspcared = false;
 bool canMangleSpawn = true;
+bool hasFreddySpawned = false;
+bool canFreddySpawn = true;
+bool hasFreddyDukedDown = false;
+bool isFreddyJumpscaring = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -67,6 +72,9 @@ IMG_Anim springtrap_attack = {0};
 IMG_Anim springtrap_jumpscare = {0};
 IMG_Anim loadGreen = {0};
 IMG_Anim BB = {0};
+IMG_Anim freddy = {0};
+IMG_Anim freddy_jumpscare = {0};
+u8 freddy_f = 0;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
 GRRLIB_texImg *panelClick = NULL;
@@ -104,7 +112,10 @@ int BBSpawn = -1;
 u64 BBcounter = 0;
 u64 MangleCounter = 0;
 u64 MangleJumspcareCounter = 0;
+u64 freddyCounter = 0;
 u8 BBAlpha = 255;
+u8 freddyjumpscare_f = 0;
+u8 freddy_alpha = 255;
 
 const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -476,7 +487,7 @@ void drawControlPanel(){
                 controlPanel_f+=1;
                 canPanelButtonBeClicked = false;           
             }
-            else{PanelButtonVisible = false; ScreenOpen = true; isControlPanelOpen = true;}
+            else{PanelButtonVisible = false; isControlPanelOpen = true;}
         }
     }
     else if(isControlPanelOpen == 2){
@@ -491,7 +502,6 @@ void drawControlPanel(){
             else{
                 canPanelButtonBeClicked = true;
                 isControlPanelOpen = false;
-                ScreenOpen = false;
                 IsCurrentlyClosingPanel = false;
             }
         }
@@ -608,14 +618,14 @@ void drawCamButton(){
 }
 
 void drawCamPanel(){
-    if(isCamOpen && !isJumpscare && !IsBBJumpscaring){
+    if(isCamOpen && !isJumpscare && !IsBBJumpscaring && !isFreddyJumpscaring){
         CamPanel_alpha = 255;
         GRRLIB_DrawImg(SCREEN_W - (CamPanel.frames[CamPanel_f]->w), 60, CamPanel.frames[CamPanel_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+CamPanel_alpha);
         if(frame%2==0){
             if(CamPanel_f < 9){
                 CamPanel_f+=1;
                 camButton_alpha = 99;
-            }else{camButton_alpha = 50; ScreenOpen = true;}
+            }else{camButton_alpha = 50;}
         }
     }else{
         FreeAllImgAnim2(&neutral_cams);
@@ -625,7 +635,7 @@ void drawCamPanel(){
             if(CamPanel_f > 0){
                 CamPanel_f-=1;
                 camButton_alpha = 99;
-            }else{camButton_alpha = 100; CamPanel_alpha = 0; ScreenOpen = false;}
+            }else{camButton_alpha = 100; CamPanel_alpha = 0;}
         }
     }
 }
@@ -1025,6 +1035,60 @@ void Mangle_calc(){
     if(selected_cam == 4 && hasMangleSpawned && isCamOpen){MangleCounter++;}
 }
 
+void Freddy_calc(){
+    if(!hasFreddySpawned){
+        if(freddy.loaded){
+            freddy.loaded = false;
+            FreeImgAnim(&freddy);
+        }
+        return;
+    }
+    if(!freddy.loaded){
+        freddy.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/653.png");
+        freddy.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/655.png");
+        freddy.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/641.png");
+        freddy.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/642.png");
+        freddy.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/643.png");
+        freddy.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/644.png");
+        freddy.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/646.png");
+        freddy.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/647.png");
+        freddy.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/648.png");
+        freddy.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/649.png");
+        freddy.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/650.png");
+        freddy.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/651.png");
+        freddy.frames[12] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/652.png");
+        freddy.loaded = true;
+    }
+    static int freddy_x = 0;
+    static int freddy_y = 80;
+    freddy_x = x+HALF_REGION + 300;
+    static int freddy_x2 = 0; // ends at -560
+    GRRLIB_DrawImg(freddy_x + freddy_x2, freddy_y, freddy.frames[freddy_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+    if(frame%4==0 && !hasFreddyDukedDown){
+        freddy_f = (freddy_f + 1) % 13;
+        freddy_x2-=2;
+    }
+    if(freddyCounter >= (BB_Ai[NIGHT-1] * 3)){
+        canFreddySpawn = false;
+        if(freddy_y < 250){
+            freddy_y+=5;
+        }else{hasFreddyDukedDown = true; hasFreddySpawned = false;}
+    }else{
+        if(freddy_x2 <= -560){
+            hasFreddySpawned = false;
+            hasFreddyDukedDown = false;
+            //isFreddyJumpscaring = false;
+        }
+    }
+    if(hasFreddyDukedDown){
+        if(freddy.loaded){
+            freddy.loaded = false;
+            FreeImgAnim(&freddy);
+        }
+    }
+    if(!ScreenOpen && !hasFreddyDukedDown){freddyCounter++;}
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -1035,10 +1099,10 @@ int gameSceneMain(){
     s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
     u16 x_l[15] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
     u16 y_l[15] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad, 236, 313, 352, 301, 392}; // FOR CAM LAYOUT BUTTONS
-    char buffer[100];
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
     picrandom = rand()%2;
+    canFreddySpawn = true;
     if(NIGHT!=1){
         mon_cam = (rand() % 5) + 6;
     }
@@ -1054,8 +1118,14 @@ int gameSceneMain(){
         if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring){
             canPan = false;
         }
-        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring){
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring){
             canPan = true;
+        }
+        if(isCamOpen || isControlPanelOpen){
+            ScreenOpen = true;
+        }
+        if(!isCamOpen && !isControlPanelOpen){
+            ScreenOpen = false;
         }
         if(hasBBSpawned){
             if(BB.loaded){
@@ -1066,12 +1136,11 @@ int gameSceneMain(){
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
         Stage1_2();
+        Freddy_calc();
         Mangle_calc();
         drawOffice();
         drawFan();
-        if(!isJumpscare){
-            GRRLIB_Screen2Texture(0, 0, sceneTex, false);
-        }
+        GRRLIB_Screen2Texture(0, 0, sceneTex, false);
         DrawWarpedScene(); //anything drew before this are getting warped
         drawPanelButton();
         drawControlPanel();
@@ -1088,6 +1157,35 @@ int gameSceneMain(){
         if(blip_f < 4){
             drawBlip();
         }
+        if(isFreddyJumpscaring){
+            canFreddySpawn = false;
+
+            if(!freddy_jumpscare.loaded){
+                freddy_jumpscare.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/362.png");
+                freddy_jumpscare.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/475.png");
+                freddy_jumpscare.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/477.png");
+                freddy_jumpscare.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/479.png");
+                freddy_jumpscare.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/481.png");
+                freddy_jumpscare.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/483.png");
+                //freddy_jumpscare.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/485.png");
+                freddy_jumpscare.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/491.png");
+                //freddy_jumpscare.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/499.png");
+                //freddy_jumpscare.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/504.png");
+                freddy_jumpscare.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/769.png");
+                freddy_jumpscare.loaded = true;
+            }
+            GRRLIB_DrawImg(0, SCREEN_H - (freddy_jumpscare.frames[freddyjumpscare_f]->h), freddy_jumpscare.frames[freddyjumpscare_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + freddy_alpha);
+        }
+        if(freddyjumpscare_f >= 7 && isFreddyJumpscaring){
+            ventHealth = 0;
+            if(freddy_alpha > 0){
+                freddy_alpha-=5;
+            }else{isFreddyJumpscaring = false; canFreddySpawn = false; if(freddy_jumpscare.loaded){freddy_jumpscare.loaded = false; FreeImgAnim(&freddy_jumpscare);}}
+        }
+        if(frame%5==0 && freddyjumpscare_f < 7 && isFreddyJumpscaring){
+        //    freddyjumpscare_f++;
+            freddyjumpscare_f = freddyjumpscare_f + 1;
+        }
         if(audioHealth <= 0){
             audioError = true;
         }
@@ -1103,10 +1201,11 @@ int gameSceneMain(){
         drawCamLayout();
         drawCamButton();
         
-        sprintf(buffer, "%d, %d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, neutral_cams.frames[0] == NULL, neutral_cams.loaded[0]);
+        //sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
         //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
         //sprintf(buffer, "%d", selected_cam == BBSpawn);
+        sprintf(buffer, "%d, %d", hasFreddyDukedDown, isFreddyJumpscaring);
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
@@ -1223,6 +1322,14 @@ int gameSceneMain(){
             if(isRebootingVent){
                 ventProgress += (rand() % 4) + 1;
             }
+            if(hasFreddyDukedDown && !isFreddyJumpscaring){
+                if((rand() % 2) == 0){
+                    freddyjumpscare_f = 0;
+                    freddy_alpha = 255;
+                    isFreddyJumpscaring = true;
+                    hasFreddyDukedDown = false;
+                }
+            }
             move_counter++;
         }
         if(frame%(60*2)==0){ // global 2 seconds timer
@@ -1244,12 +1351,20 @@ int gameSceneMain(){
                 hasMangleSpawned = true;
             }
         }
+        if(frame%(60*60)==0){ // global 1 minute timer
+            if((rand()%12)+1 <= Springtrap_AI[NIGHT-1] && time_am != 12 && NIGHT >= 3 && canFreddySpawn){
+                hasFreddySpawned = true;
+            }
+        }
         if(time_am == 3 && !hasBBSpawned && BBSpawn == -1 && !videoError && !isCamOpen && NIGHT!=1){ // force spawn bb at 3 am
             u8 bb_cams[4] = {1, 7, 9, 10};
             BBSpawn = bb_cams[(rand() % 4)];
         }
         if(time_am == 5 && canMangleSpawn && !videoError && NIGHT!=1){ // force spawn mangle at 5 am
             hasMangleSpawned = true;
+        }
+        if(time_am == 4 && NIGHT >= 3 && canFreddySpawn){
+            hasFreddySpawned = true;
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am >= 4){
@@ -1283,6 +1398,8 @@ int gameSceneMain(){
     FreeImgAnim(&springtrap_jumpscare);
     FreeImgAnim(&loadGreen);
     FreeImgAnim(&BB);
+    FreeImgAnim(&freddy);
+    FreeImgAnim(&freddy_jumpscare);
     GRRLIB_FreeTexture(mangle);
     return 0;
 }
