@@ -42,6 +42,8 @@ bool hasFreddySpawned = false;
 bool canFreddySpawn = true;
 bool hasFreddyDukedDown = false;
 bool isFreddyJumpscaring = false;
+bool canPlayLure = true;
+bool isLurePlaying = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -74,6 +76,7 @@ IMG_Anim loadGreen = {0};
 IMG_Anim BB = {0};
 IMG_Anim freddy = {0};
 IMG_Anim freddy_jumpscare = {0};
+IMG_Anim lureLoad = {0};
 u8 freddy_f = 0;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
@@ -116,6 +119,12 @@ u64 freddyCounter = 0;
 u8 BBAlpha = 255;
 u8 freddyjumpscare_f = 0;
 u8 freddy_alpha = 255;
+int lureDelay = 0;
+
+s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
+s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
+u16 cam_x_l[15] = {361, 495, 547, 547, 445, 357, 357, 424, 465, 532, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
+u16 cam_y_l[15] = {407, 391, 364, 324, 333, 338, 297, 283, 257, 280, 236, 313, 352, 301, 392}; // FOR CAM LAYOUT BUTTONS
 
 const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -686,32 +695,31 @@ void drawCamLayout(){
         CamLayoutNmb.loaded = true;
     }
     if(!camLayoutSelection){
-        int y_pad = 0;
         int x_pad = -30;
-        u16 x_l[10] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad};
-        u16 y_l[10] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad};
         if(MapLayoutNormalMode == 0){
-            GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
-        }else{GRRLIB_DrawImg(356+x_pad, 222+y_pad, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
-        GRRLIB_DrawImg(420+x_pad, 413+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
-        GRRLIB_DrawImg(528+x_pad, 376+y_pad, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(560+x_pad, 370+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(560+x_pad, 330+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            GRRLIB_DrawImg(326, 222, CamLayout.frames[camLayoutSelection], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for the layout       
+        }else{GRRLIB_DrawImg(326, 222, CamLayout.frames[camLayoutSelection + 2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);} // for the layout
+        GRRLIB_DrawImg(420+x_pad, 413, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+        GRRLIB_DrawImg(528+x_pad, 376, triangle.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(560+x_pad, 370, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(560+x_pad, 330, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         // there's no fifth one
-        GRRLIB_DrawImg(414+x_pad, 344+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(414+x_pad, 304+y_pad, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(461+x_pad, 300+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(500+x_pad, 270+y_pad, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        GRRLIB_DrawImg(547+x_pad, 289+y_pad, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
+        GRRLIB_DrawImg(414+x_pad, 344, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(414+x_pad, 304, triangle.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(461+x_pad, 300, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(500+x_pad, 270, triangle.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_DrawImg(547+x_pad, 289, triangle.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // triangles
 
         for(int i = 0; i<10; i++){
             if(selected_cam-1 == i){
-                GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-            }else{GRRLIB_DrawImg(x_l[i], y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
-            GRRLIB_DrawImg(x_l[i] + (CamLayoutNmb.frames[1]->w/2), y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
+                GRRLIB_DrawImg(cam_x_l[i], cam_y_l[i], CamLayoutNmb.frames[16], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            }else{GRRLIB_DrawImg(cam_x_l[i], cam_y_l[i], CamLayoutNmb.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);}
+            GRRLIB_DrawImg(cam_x_l[i] + (CamLayoutNmb.frames[1]->w/2), cam_y_l[i] + (CamLayoutNmb.frames[1]->h/2), CamLayoutNmb.frames[i + 1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // apparently this is the wrong way to scale it, but i'll let it be since it works
         }
-        GRRLIB_DrawImg(268, 332, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
-        GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
+        if(!isLurePlaying){
+            GRRLIB_DrawImg(268, 332, CamLayoutNmb.frames[17], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for big buttons
+            GRRLIB_DrawImg(268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2), CamLayoutNmb.frames[18], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // this is the right way to do it
+        }
     }
     else{ // for vent
         u16 x_l[5] = {363, 399, 454, 501, 529};
@@ -1089,16 +1097,106 @@ void Freddy_calc(){
     if(!ScreenOpen && !hasFreddyDukedDown){freddyCounter++;}
 }
 
+void playLure(){
+    static u8 lure_cam = 0;
+    static int working = -1;
+    static u8 lure_f = 0;
+    static u8 lure_radio_f = 0;
+    static bool hasTped = false;
+    static u64 lureCounter = 0;
+    if(lure_cam == 0){
+        lure_cam = selected_cam;
+    }
+    if(working == -1){
+        working = (rand() % 7) + 1;
+    }
+    if(isLurePlaying){
+        canPlayLure = false;
+        if(!lureLoad.loaded){
+            lureLoad.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/533.png");
+            lureLoad.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/534.png");
+            lureLoad.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/535.png");
+            lureLoad.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/536.png");
+            lureLoad.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/537.png");
+            lureLoad.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/538.png");
+            lureLoad.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/539.png"); // this and onward is the "radio"
+            lureLoad.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/540.png");
+            lureLoad.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/541.png");
+            lureLoad.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/542.png");
+            lureLoad.loaded = true;
+        }
+        if(working >= 2){
+            if(working >= 2 && lure_cam == 1 && attack_stage == 4){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 2 && attack_stage == 1){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 2 && mon_cam == 3){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 2 && mon_cam == 4){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 2 && mon_cam == 5){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 3 && mon_cam == 2){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 3 && mon_cam == 4){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 4 && mon_cam == 2){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 4 && mon_cam == 3){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 5 && mon_cam == 2){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 5 && mon_cam == 6){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 5 && mon_cam == 7){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 5 && mon_cam == 8){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 6 && mon_cam == 5){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 6 && mon_cam == 7){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 7 && mon_cam == 6){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 7 && mon_cam == 8){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 8 && mon_cam == 7){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 8 && mon_cam == 5){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 8 && mon_cam == 9){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 9 && mon_cam == 8){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 9 && mon_cam == 10){lureDelay = (rand()%100); working = -2;}
+            if(working >= 2 && lure_cam == 10 && mon_cam == 9){lureDelay = (rand()%100); working = -2;}
+        }
+        if(working == -2 || working == 1){
+            if(working == 1){
+                hasTped = true;
+            }
+            if(lureDelay == 0){
+                if(!hasTped){
+                    mon_cam = lure_cam;
+                    CamStatic_alpha = 255;
+                    hasTped = true;
+                }
+            }
+        }
+        if(lureCounter >= (90*6)){
+            working = -1;
+            canPlayLure = true;
+            isLurePlaying = false;
+            lure_cam = 0;
+            lure_f = 0;
+            lure_radio_f = 0;
+            hasTped = false;
+            lureDelay = 0;
+            lureCounter = 0;
+            lureLoad.loaded = false;
+            FreeImgAnim(&lureLoad);
+        }
+        if(camButton_alpha == 50 && camLayoutSelection == 0){
+            GRRLIB_DrawImg(260, 360, lureLoad.frames[lure_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            if(lure_radio_f != 4){
+                GRRLIB_DrawImg(cam_x_l[lure_cam-1]-50, cam_y_l[lure_cam-1]-15, lureLoad.frames[6+lure_radio_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            }
+        }
+        if(frame%90==0 && lure_f < 5){
+            lure_f++;
+        }
+        if(frame%30==0 && lure_radio_f < 4){
+            lure_radio_f++;
+        }
+        lureCounter++;
+    }
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     InitAllImg();
     srand(time(NULL));
-    s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
-    s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
-    u16 x_l[15] = {391 + x_pad, 525 + x_pad, 577 + x_pad, 577 + x_pad, 475 + x_pad, 387 + x_pad, 387 + x_pad, 454 + x_pad, 495 + x_pad, 562 + x_pad, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
-    u16 y_l[15] = {407 + y_pad, 391 + y_pad, 364 + y_pad, 324 + y_pad, 333 + y_pad, 338 + y_pad, 297 + y_pad, 283 + y_pad, 257 + y_pad, 280 + y_pad, 236, 313, 352, 301, 392}; // FOR CAM LAYOUT BUTTONS
     sceneTex = GRRLIB_CreateEmptyTexture(SCREEN_W, SCREEN_H);
     u64 buttonCamDelay = 0;
     picrandom = rand()%2;
@@ -1200,12 +1298,15 @@ int gameSceneMain(){
         }
         drawCamLayout();
         drawCamButton();
+        if(isLurePlaying){
+            playLure();
+        }
         
-        //sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
+        sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
         //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
         //sprintf(buffer, "%d", selected_cam == BBSpawn);
-        sprintf(buffer, "%d, %d", hasFreddyDukedDown, isFreddyJumpscaring);
+        //sprintf(buffer, "%d, %d", hasFreddyDukedDown, isFreddyJumpscaring);
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
@@ -1241,7 +1342,7 @@ int gameSceneMain(){
                 }
                 for(int i = 0; i < 10; i++){
                     if(camLayoutSelection == 0){
-                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i], y_l[i]) && buttonCamDelay >= 20){
+                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], cam_x_l[i], cam_y_l[i]) && buttonCamDelay >= 20){
                             selected_cam = i + 1;
                             blip_f = 0;
                             CamStatic_alpha = 255;
@@ -1251,7 +1352,7 @@ int gameSceneMain(){
                 }
                 for(int i = 0; i < 5; i++){
                     if(camLayoutSelection == 1 && !isSealing){
-                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], x_l[i + 10], y_l[i + 10]) && buttonCamDelay >= 20){
+                        if(IsCursorWithinImg(CamLayoutNmb.frames[0], cam_x_l[i + 10], cam_y_l[i + 10]) && buttonCamDelay >= 20){
                             blip_f = 0;
                             CamStatic_alpha = 255;
                             buttonCamDelay = 0;
@@ -1263,12 +1364,16 @@ int gameSceneMain(){
                         }  
                     }                 
                 }
-                if(IsCursorWithinImg(CamLayoutNmb.frames[18], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2)) && camButton_alpha == 50){ // for map toggle, SON :sob:
+                if(IsCursorWithinImg(CamLayoutNmb.frames[19], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2)) && camButton_alpha == 50){ // for map toggle, SON :sob:
                     if(camLayoutSelection == 0){
                         selected_cam = 11;
                     }else{selected_cam = 2;}
                     camLayoutSelection = !camLayoutSelection;
-                }          
+                }
+                if(IsCursorWithinImg(CamLayoutNmb.frames[18], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2)) && canPlayLure && camLayoutSelection == 0 && !isLurePlaying && isCamOpen && audioHealth > 0 && !audioError){ // for audio lures
+                    isLurePlaying = true;
+                    audioHealth -= Springtrap_AI[NIGHT-1];
+                }
             }
         }
         drawPanelText();
@@ -1370,6 +1475,9 @@ int gameSceneMain(){
         if(time_am >= 4){
             aggresive = true;
         }
+        if(lureDelay > 0){
+            lureDelay--;
+        }
         if(time_am == 6){break;}
         drawCursor();
         GRRLIB_Render();
@@ -1400,6 +1508,7 @@ int gameSceneMain(){
     FreeImgAnim(&BB);
     FreeImgAnim(&freddy);
     FreeImgAnim(&freddy_jumpscare);
+    FreeImgAnim(&lureLoad);
     GRRLIB_FreeTexture(mangle);
     return 0;
 }
