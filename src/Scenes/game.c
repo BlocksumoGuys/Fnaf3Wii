@@ -35,7 +35,7 @@ bool isRebootingAll = false;
 bool isRebooting = false;
 bool IsBBJumpscaring = false;
 bool hasBBSpawned = false;
-bool hasMangleSpawned = false;
+bool hasMangleSpawned = true; //hehe
 bool hasMangleJumspcared = false;
 bool canMangleSpawn = true;
 bool hasFreddySpawned = false;
@@ -44,6 +44,8 @@ bool hasFreddyDukedDown = false;
 bool isFreddyJumpscaring = false;
 bool canPlayLure = true;
 bool isLurePlaying = false;
+bool canMute = true;
+bool destroyedMute = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -84,6 +86,7 @@ GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
 GRRLIB_texImg *sceneTex = NULL;
 GRRLIB_texImg *mangle = NULL;
+GRRLIB_texImg *mute = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
 u8 picrandom;
@@ -142,6 +145,7 @@ int vent_closer1;
 int vent_closer2;
 int done;
 int scream3;
+int garble1;
 u8 play_effect;
 bool isPlay1;
 bool isPlay2;
@@ -335,6 +339,8 @@ void InitAllImg(){
     BB.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/347.png");
     BB.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/667.png"); // jumpscare (also white flash)
     BB.loaded = true;
+
+    mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
     Desolate_Underworld2 = SM_LoadAudio("Desolate_Underworld2.wav");
@@ -1065,6 +1071,7 @@ void BB_calc(){
 void Mangle_calc(){
     //GRRLIB_DrawImg(x+HALF_REGION, 190, GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/202.png"), 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     static int mangle_y = 250;
+    static bool JumpAudio = false;
     if((selected_cam != 4 || !isCamOpen) && hasMangleSpawned){
         if(MangleCounter > 0){
             MangleCounter = 0;
@@ -1083,6 +1090,11 @@ void Mangle_calc(){
         if(mangle_y > 190 && frame%2==0){
             mangle_y--;
         }
+        if(!JumpAudio){
+            garble1 = SM_LoadAudio("garble1.wav");
+            SM_PlayAudio(garble1, 120, 120, true, false, 0);
+            JumpAudio = true;
+        }
         MangleJumspcareCounter++;
         GRRLIB_DrawImg(x+HALF_REGION, mangle_y, mangle, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     }
@@ -1091,7 +1103,7 @@ void Mangle_calc(){
         MangleCounter = 0;
         if(mangle_y < 250){
             mangle_y++;
-        }else{MangleJumspcareCounter = 0; hasMangleJumspcared = false; audioHealth = 0; MangleCounter = 0; GRRLIB_FreeTexture(mangle);}
+        }else{MangleJumspcareCounter = 0; hasMangleJumspcared = false; audioHealth = 0; MangleCounter = 0; JumpAudio = false; SM_FreeAudio(garble1); GRRLIB_FreeTexture(mangle);}
     }
     if(selected_cam == 4 && hasMangleSpawned && isCamOpen){MangleCounter++;}
 }
@@ -1202,6 +1214,8 @@ void playLure(){
             if(working >= 2 && lure_cam == 9 && mon_cam == 8){lureDelay = (rand()%100); working = -2;}
             if(working >= 2 && lure_cam == 9 && mon_cam == 10){lureDelay = (rand()%100); working = -2;}
             if(working >= 2 && lure_cam == 10 && mon_cam == 9){lureDelay = (rand()%100); working = -2;}
+            action_selected = 0;
+            total_turns = 0;
         }
         if(working == -2 || working == 1){
             if(working == 1){
@@ -1402,6 +1416,14 @@ int gameSceneMain(){
         if(isRebooting){
             reboot();
         }
+        if(canMute){
+            GRRLIB_DrawImg(20, 20, mute, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }else{
+            if(!destroyedMute){
+                GRRLIB_FreeTexture(mute);
+                destroyedMute = true;
+            }
+        }
         drawCamLayout();
         drawCamButton();
         if(isLurePlaying){
@@ -1494,10 +1516,17 @@ int gameSceneMain(){
                     audioHealth -= Springtrap_AI[NIGHT-1];
                 }
             }
+            if(IsCursorWithinImg(mute, 20, 20) && canMute){
+                MP3Player_Stop();
+                canMute = false;
+            }
         }
         drawPanelText();
         if(isJumpscare){
             jumpscare();
+        }
+        if(!MP3Player_IsPlaying()){
+            canMute = false;
         }
         drawNightInf();
         if(NIGHT == 1){
