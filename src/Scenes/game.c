@@ -46,6 +46,11 @@ bool canPlayLure = true;
 bool isLurePlaying = false;
 bool canMute = true;
 bool destroyedMute = false;
+bool hasPuppetSpawned = false; // change to false
+bool canPuppetSpawn = true;
+bool isPuppetAttacking = false;
+bool puppetLoaded = false;
+bool BBcamLoaded = false;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -87,6 +92,8 @@ GRRLIB_texImg *camClick = NULL;
 GRRLIB_texImg *sceneTex = NULL;
 GRRLIB_texImg *mangle = NULL;
 GRRLIB_texImg *mute = NULL;
+GRRLIB_texImg *puppet = NULL;
+GRRLIB_texImg *bb_cam = NULL;
 u8 camButton_alpha = 100;
 u8 selected_cam = 2;
 u8 picrandom;
@@ -123,6 +130,8 @@ u8 BBAlpha = 255;
 u8 freddyjumpscare_f = 0;
 u8 freddy_alpha = 255;
 int lureDelay = 0;
+u64 PuppetCamCounter = 0;
+u64 PuppetOfficeCounter = 0;
 
 s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
 s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
@@ -146,13 +155,14 @@ int vent_closer2;
 int done;
 int scream3;
 int garble1;
+int mask_sound;
 u8 play_effect;
 bool isPlay1;
 bool isPlay2;
 bool isPlay3;
 bool isPlay4;
 
-const char *sp_cams_arr[25] = {
+const char *sp_cams_arr[29] = {
     "sd:/fnaf3/assets/images/295.png",
     "sd:/fnaf3/assets/images/132.png",
     "sd:/fnaf3/assets/images/133.png",
@@ -178,9 +188,13 @@ const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/841.png",
     "sd:/fnaf3/assets/images/832.png",
     "sd:/fnaf3/assets/images/38.png" // mangle
+    "sd:/fnaf3/assets/images/297.png", // phantom puppet
+    "sd:/fnaf3/assets/images/298.png",
+    "sd:/fnaf3/assets/images/300.png",
+    "sd:/fnaf3/assets/images/298.png" // phantom puppet
 };
 
-const char *nt_cams_arr[25] = {
+const char *nt_cams_arr[29] = {
     "sd:/fnaf3/assets/images/106.png", // 106
     "sd:/fnaf3/assets/images/97.png", // 97
     "sd:/fnaf3/assets/images/103.png", // 103
@@ -205,7 +219,11 @@ const char *nt_cams_arr[25] = {
     "sd:/fnaf3/assets/images/628.png",
     "sd:/fnaf3/assets/images/824.png",
     "sd:/fnaf3/assets/images/818.png",
-    "sd:/fnaf3/assets/images/38.png" // mangle
+    "sd:/fnaf3/assets/images/38.png", // mangle
+    "sd:/fnaf3/assets/images/297.png", // phantom puppet
+    "sd:/fnaf3/assets/images/298.png",
+    "sd:/fnaf3/assets/images/300.png",
+    "sd:/fnaf3/assets/images/298.png" // phantom puppet
 };
 
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
@@ -301,20 +319,6 @@ void InitAllImg(){
     loadGreen.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
     loadGreen.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
 
-    BB.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/70.png"); // bb on cam
-    BB.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/67.png"); // in ofice idle
-    BB.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/328.png"); // jumpscare
-    BB.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/338.png");
-    BB.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/341.png");
-    BB.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/344.png");
-    BB.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/349.png");
-    BB.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/342.png");
-    BB.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/343.png");
-    BB.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/345.png");
-    BB.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/347.png");
-    BB.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/667.png"); // jumpscare (also white flash)
-    BB.loaded = true;
-
     mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
@@ -397,6 +401,7 @@ void drawCams(){
         break;
     case 8:
         v = cam8_f + 13;
+        if(hasPuppetSpawned){v = cam8_f + 25;}
         if(selected_cam == mon_cam){
             dcv(v, 0);
             GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
@@ -1049,6 +1054,21 @@ void BB_calc(){
         isCamOpen = false;
     }
     if(IsBBJumpscaring){
+        if(!BB.loaded){
+            BB.frames[0] = NULL; // bb on cam (loaded dynamically)
+            BB.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/67.png"); // in ofice idle
+            BB.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/328.png"); // jumpscare
+            BB.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/338.png");
+            BB.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/341.png");
+            BB.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/344.png");
+            BB.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/349.png");
+            BB.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/342.png");
+            BB.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/343.png");
+            BB.frames[9] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/345.png");
+            BB.frames[10] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/347.png");
+            BB.frames[11] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/667.png"); // jumpscare (also white flash)
+            BB.loaded = true;
+        }
         int y_pad = 40;
         int x_pad = 100;
         if(camButton_alpha != 100){
@@ -1071,6 +1091,7 @@ void BB_calc(){
                     ventHealth = 0;
                     ventilationError = true;
                     hasBBSpawned = true;
+                    if(BB.loaded){BB.loaded = false; FreeImgAnim(&BB);}
                 }
             }
         }
@@ -1273,6 +1294,86 @@ s32  my_reader(void *fp,void *dat, s32 size) // found this on a forum for the mp
 	return fread(dat, 1, size, fp);
 }
 
+void Puppet_calc(){
+    static int puppet_x = 0;
+    static int puppet_y = 0;
+    static int dir = -5;
+    static int dir2 = -2;
+    static int blackout_dir_puppet = 5;
+    static int blackout_puppet_alpha = 0;
+    static bool hasSoundPlayed = false;
+    if((selected_cam != 8 || !isCamOpen) && hasPuppetSpawned){
+        if(PuppetCamCounter > 0){
+            PuppetCamCounter = 0;
+            PuppetOfficeCounter = 0;
+            hasPuppetSpawned = false;
+            isPuppetAttacking = false;
+        }
+        return;
+    }
+    if(PuppetCamCounter >= BB_Ai[NIGHT-1]){
+        if(!puppetLoaded){
+            puppet = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/334.png");
+            puppetLoaded = true;
+        }
+        isCamOpen = false;
+        hasPuppetSpawned = false;
+        isPuppetAttacking = true;
+    }
+    if(isPuppetAttacking){
+        PuppetOfficeCounter++;
+        GRRLIB_DrawImg(puppet_x, puppet_y, puppet, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        GRRLIB_Rectangle(0, 0, SCREEN_W, SCREEN_H, 0x00020f00 + blackout_puppet_alpha, true);
+        if(!hasSoundPlayed){
+            mask_sound = SM_LoadAudio("mask.wav");
+            SM_PlayAudio(mask_sound, 127, 127, true, false, 0);
+            hasSoundPlayed = true;
+        }
+        if(puppet_y == 0){
+            x += dir;
+            if(x<=-(HALF_REGION-20)){
+                x = -(HALF_REGION-20);
+                dir = 5;
+            }else if(x >= 0){
+                x = 0;
+                dir = -5;
+            }
+            puppet_x += dir2;
+            if (puppet_x <= -25) {
+                puppet_x = -25;
+                dir2 = 2;
+            }
+            else if (puppet_x >= 40) {
+                puppet_x = 40;
+                dir2 = -2;
+            }
+        }
+
+        blackout_puppet_alpha += blackout_dir_puppet;
+        if (blackout_puppet_alpha <= 50) {
+            blackout_puppet_alpha = 50;
+            blackout_dir_puppet = 5;
+        }
+        else if (blackout_puppet_alpha >= 255) {
+            blackout_puppet_alpha = 255;
+            blackout_dir_puppet = -5;
+        }
+    }
+    if(PuppetOfficeCounter>=60*5){
+        if(puppet_y < 480){
+            puppet_y+=15;
+            if(blackout_puppet_alpha <= 0){
+                blackout_puppet_alpha = 0;
+            }else{blackout_puppet_alpha-=5;}
+        }else{isPuppetAttacking = false; blackout_puppet_alpha = 0; PuppetCamCounter = 0; PuppetOfficeCounter = 0; if(puppetLoaded){puppetLoaded = false; GRRLIB_FreeTexture(puppet);}}
+        canPuppetSpawn = false;
+        if(hasSoundPlayed){
+            hasSoundPlayed = false;
+            SM_FreeAudio(mask_sound);
+        }
+    }
+    if(isCamOpen && selected_cam == 8 && hasPuppetSpawned) {PuppetCamCounter++;}
+}
 
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
@@ -1320,10 +1421,10 @@ int gameSceneMain(){
         WPAD_IR(0, &ir);
         SM_UpdateAudio();
         IR_Y = ir.y * (480.0f / 460.0f);
-        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring){
+        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking){
             canPan = false;
         }
-        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring){
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring && !isPuppetAttacking){
             canPan = true;
         }
         if(isCamOpen || isControlPanelOpen){
@@ -1370,10 +1471,20 @@ int gameSceneMain(){
         drawPanelButton();
         drawControlPanel();
         BB_calc();
+        Puppet_calc();
         drawCamPanel();
         drawCams();
         if(selected_cam == BBSpawn && isCamOpen && !videoError){
-            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+            if(!BBcamLoaded){
+                bb_cam = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/70.png");
+                BBcamLoaded = true;
+            }
+            GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, bb_cam, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }else{
+            if(BBcamLoaded){
+                BBcamLoaded = false;
+                GRRLIB_FreeTexture(bb_cam);
+            }
         }
         drawCamStatic();
         if(isSealing && !ventilationError){
@@ -1619,6 +1730,9 @@ int gameSceneMain(){
             if(canMangleSpawn && ((rand()%8)+1) <= Springtrap_AI[NIGHT-1] && NIGHT!=1 && !videoError && time_am != 12){
                 hasMangleSpawned = true;
             }
+            if(canPuppetSpawn && selected_cam != 8 && !hasPuppetSpawned && !isPuppetAttacking && time_am != 12 && (rand()%10)+1 <= Springtrap_AI[NIGHT-1] && NIGHT >= 4){
+                hasPuppetSpawned = true;
+            }
         }
         if(frame%(60*60)==0){ // global 1 minute timer
             if((rand()%12)+1 <= Springtrap_AI[NIGHT-1] && time_am != 12 && NIGHT >= 3 && canFreddySpawn){
@@ -1632,8 +1746,11 @@ int gameSceneMain(){
         if(time_am == 5 && canMangleSpawn && !videoError && NIGHT!=1){ // force spawn mangle at 5 am
             hasMangleSpawned = true;
         }
-        if(time_am == 4 && NIGHT >= 3 && canFreddySpawn){
+        if(time_am == 4 && NIGHT >= 3 && canFreddySpawn && !hasFreddySpawned){
             hasFreddySpawned = true;
+        }
+        if(time_am == 5 && NIGHT >= 4 && canPuppetSpawn && !hasPuppetSpawned && !isPuppetAttacking){
+            hasPuppetSpawned = true;
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am >= 4){
