@@ -17,7 +17,10 @@
 #include <grrlib.h>
 #include <wiiuse/wpad.h>
 #include <string.h>
+#include <asndlib.h>
+#include <mp3player.h>
 
+#include "SoundManager.h"
 #include "warningScene.h"
 #include "menu.h"
 #include "ad.h"
@@ -30,7 +33,7 @@
 u8 imgCheck(GRRLIB_texImg* img);
 float CenterX(GRRLIB_texImg *img);
 float CenterY(GRRLIB_texImg *img);
-u8* loadBuf(const char* path, s32 *sizeOut);
+u8* loadBuf(const char* path, s32* sizeOut);
 
 typedef struct
 {

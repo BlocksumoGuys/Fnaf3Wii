@@ -126,6 +126,14 @@ s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
 u16 cam_x_l[15] = {361, 495, 547, 547, 445, 357, 357, 424, 465, 532, 363, 399, 454, 501, 529}; // FOR CAM LAYOUT BUTTONS
 u16 cam_y_l[15] = {407, 391, 364, 324, 333, 338, 297, 283, 257, 280, 236, 313, 352, 301, 392}; // FOR CAM LAYOUT BUTTONS
 
+int Desolate_Underworld2;
+int tablefan;
+int crank1;
+int crank2;
+int static_sound;
+int lever1;
+int select_sound;
+int reboot_sound;
 const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/295.png",
     "sd:/fnaf3/assets/images/132.png",
@@ -315,6 +323,10 @@ void InitAllImg(){
     BB.loaded = true;
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
+    Desolate_Underworld2 = SM_LoadAudio("Desolate_Underworld2.wav");
+    tablefan = SM_LoadAudio("tablefan.wav");
+    static_sound = SM_LoadAudio("static_sound.wav");
+    select_sound = SM_LoadAudio("select.wav");
 }
 
 void dcv(int v, bool mode){
@@ -573,6 +585,7 @@ void drawOffice(){
 
 void drawPanelText(){
     if(PanelButtonVisible) return;
+    static int old_select = 0;
     GRRLIB_DrawImg(42, 162, PanelCommands.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     GRRLIB_DrawImg(85, 235, PanelCommands.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
     GRRLIB_DrawImg(85, 273, PanelCommands.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
@@ -619,6 +632,10 @@ void drawPanelText(){
         GRRLIB_DrawImg(66-PanelCommands.frames[6]->w + x_pad, 235 + y_pad, PanelCommands.frames[6], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         break;
     }
+    if(old_select != panelSelect){
+        SM_PlayAudio(select_sound, 127, 127, false, false, 0);
+    }
+    old_select = panelSelect;
 }
 
 void drawCamButton(){
@@ -650,12 +667,17 @@ void drawCamPanel(){
 }
 
 void drawCamStatic(){
-    if(camButton_alpha!=50) return;
+    if(camButton_alpha!=50){
+        SM_StopAudio(static_sound);
+        return;
+    };
+    SM_PlayAudio(static_sound, CamStatic_alpha, CamStatic_alpha, false, false, 0);
     static u8 CamStatic_f = 0;
     GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, CamStatic.frames[CamStatic_f], 0, 825.0f/1021.2f, 650.0f/768.0f, 0xFFFFFF00+CamStatic_alpha);
     CamStatic_f = (CamStatic_f+1)%3;
     if(CamStatic_alpha>80){
-        CamStatic_alpha-=3;
+        SM_ChangeVolume(static_sound, CamStatic_alpha-60, CamStatic_alpha-60);
+        CamStatic_alpha-=3;        
     }
 }
 
@@ -921,6 +943,7 @@ void reboot(){
             audioError = false;
             isRebootingAudio = false;
             isRebooting = false;
+            SM_FreeAudio(reboot_sound);
         }
     }
     if(isRebootingCam){
@@ -931,6 +954,7 @@ void reboot(){
             videoError = false;
             isRebootingCam = false;
             isRebooting = false;
+            SM_FreeAudio(reboot_sound);
         }
     }
     if(isRebootingVent){
@@ -941,6 +965,7 @@ void reboot(){
             ventilationError = false;
             isRebootingVent = false;
             isRebooting = false;
+            SM_FreeAudio(reboot_sound);
         }
     }
     if(isRebootingAll){
@@ -955,10 +980,17 @@ void reboot(){
             ventilationError = false;
             isRebootingAll = false;
             isRebooting = false;
+            SM_FreeAudio(reboot_sound);
         }
     }
     if(frame%20==0){
         seal_f = (seal_f + 1) % 6;
+    }
+    if(frame%120==0){
+        if(isRebooting){
+            reboot_sound = SM_LoadAudio("wait.wav");
+            SM_PlayAudio(reboot_sound, 50, 50, false, true, 0);
+        }
     }
     if(!isRebooting){
         seal_f = 0;
@@ -1204,6 +1236,8 @@ int gameSceneMain(){
     if(NIGHT!=1){
         mon_cam = (rand() % 5) + 6;
     }
+    SM_PlayAudio(tablefan, 127, 127, true, false, 0);
+    SM_PlayAudio(Desolate_Underworld2, 127, 127, true, false, 0);
     while (1)
     {
         if(time_am == 6){
@@ -1212,6 +1246,7 @@ int gameSceneMain(){
         WPAD_ScanPads();
         mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir);
+        SM_UpdateAudio();
         IR_Y = ir.y * (480.0f / 460.0f);
         if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring){
             canPan = false;
@@ -1302,7 +1337,7 @@ int gameSceneMain(){
             playLure();
         }
         
-        sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
+        //sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
         //sprintf(buffer, "%d, %d", SYS_GetArena1Size(), SYS_GetArena2Size());
         //sprintf(buffer, "%d", selected_cam == BBSpawn);
@@ -1310,10 +1345,18 @@ int gameSceneMain(){
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
-                if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){isControlPanelOpen = 1;}
+                if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){
+                    isControlPanelOpen = 1;
+                    lever1 = SM_LoadAudio("lever1.wav");
+                    SM_PlayAudio(lever1, 127, 127, false, true, 0);
+                }
             }
             if(!PanelButtonVisible && !isRebooting){
-                if(panelSelect == 4){isControlPanelOpen = 2;}
+                if(panelSelect == 4){
+                    isControlPanelOpen = 2;
+                    lever1 = SM_LoadAudio("lever1.wav");
+                    SM_PlayAudio(lever1, 127, 127, false, true, 0);
+                }
                 if(panelSelect == 0) {
                     isRebootingAudio = true;
                     isRebooting = true;
@@ -1333,11 +1376,15 @@ int gameSceneMain(){
             }
             if(camButton_alpha == 100 && fabs(x + HALF_REGION) < 1.0f){
                 if(IsCursorWithinImg(camClick, 540, 73)){
+                    crank1 = SM_LoadAudio("crank1.wav");
+                    SM_PlayAudio(crank1, 127, 127, false, true, 0);
                     isCamOpen = !isCamOpen;
                 }
             }
             if(camButton_alpha == 50){
                 if(IsCursorWithinImg(camClick, 540, 73)){
+                    crank2 = SM_LoadAudio("crank2.wav");
+                    SM_PlayAudio(crank2, 127, 127, false, true, 0);
                     isCamOpen = !isCamOpen;
                 }
                 for(int i = 0; i < 10; i++){
@@ -1485,6 +1532,9 @@ int gameSceneMain(){
         buttonCamDelay++;
         double_click_timer_vent++;
     }
+    SM_StopAudio(tablefan);
+    SM_StopAudio(Desolate_Underworld2);
+    SM_StopAudio(static_sound);
     GRRLIB_FreeTexture(panelClick);
     GRRLIB_FreeTexture(camClick);
     GRRLIB_FreeTexture(sceneTex);

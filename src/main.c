@@ -40,26 +40,25 @@ void FreeOneImgAnim2(IMG_Anim2* img_a, u8 i){
     img_a->loaded[i] = false;
 }
 
-u8* loadBuf(const char* path, s32 *sizeOut)
-{
-    FILE *f = fopen(path, "rb");
+u8* loadBuf(const char* path, s32* sizeOut) {
+    FILE* f = fopen(path, "rb");
     if (!f) return NULL;
 
     fseek(f, 0, SEEK_END);
-    int size = ftell(f);
+    s32 size = ftell(f);
     rewind(f);
 
-    u8 *buf = (u8*)memalign(32, size);
-    if (!buf) {
+    u8* buffer = memalign(32, size);
+    if (!buffer) {
         fclose(f);
         return NULL;
     }
 
-    fread(buf, 1, size, f);
+    fread(buffer, 1, size, f);
     fclose(f);
 
     *sizeOut = size;
-    return buf;
+    return buffer;
 }
 
 
@@ -67,6 +66,8 @@ int main(int argc, char *argv[]){
     fatInitDefault();
     GRRLIB_Init();
     WPAD_Init();
+    ASND_Init();
+    MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     gameSceneMain();
