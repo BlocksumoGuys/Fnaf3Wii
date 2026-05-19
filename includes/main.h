@@ -19,7 +19,7 @@
 #include <string.h>
 #include <asndlib.h>
 #include <mp3player.h>
-
+#include <malloc.h>
 #include "SoundManager.h"
 #include "warningScene.h"
 #include "menu.h"
