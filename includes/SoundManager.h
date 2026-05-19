@@ -2,6 +2,7 @@
 #include "main.h"
 #define SM_MAX_AUDIO 20
 
+
 typedef struct
 {
     s32 aud_s;

@@ -132,8 +132,22 @@ int crank1;
 int crank2;
 int static_sound;
 int lever1;
+int lever2;
 int select_sound;
 int reboot_sound;
+int alarm;
+int vent_quiet1;
+int vent_quiet2;
+int vent_closer1;
+int vent_closer2;
+int done;
+int scream3;
+u8 play_effect;
+bool isPlay1;
+bool isPlay2;
+bool isPlay3;
+bool isPlay4;
+
 const char *sp_cams_arr[25] = {
     "sd:/fnaf3/assets/images/295.png",
     "sd:/fnaf3/assets/images/132.png",
@@ -327,6 +341,7 @@ void InitAllImg(){
     tablefan = SM_LoadAudio("tablefan.wav");
     static_sound = SM_LoadAudio("static_sound.wav");
     select_sound = SM_LoadAudio("select.wav");
+    scream3 = SM_LoadAudio("scream3.wav");
 }
 
 void dcv(int v, bool mode){
@@ -553,6 +568,10 @@ void drawOffice(){
         }else{
             GRRLIB_DrawImg(x, 0, office.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
             GRRLIB_DrawImg(x+(office.frames[3]->w), 0, office.frames[3], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+        if(frame%30==0){
+            alarm = SM_LoadAudio("alarm.wav");
+            SM_PlayAudio(alarm, 120, 120, false, true, 0);
         }
     }
     if(DEBUG){
@@ -831,14 +850,14 @@ void AC_calc(){ // yes, rewriting everything
         if(mon_cam == 2) {mon_cam = 4; action_selected = 0;}
     }
     if(action_selected == 4){
-        if(mon_cam == 10) {mon_cam = 14; action_selected = 0;}
-        if(mon_cam == 9) {mon_cam = 11; action_selected = 0;}
+        if(mon_cam == 10) {mon_cam = 14; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 9) {mon_cam = 11; action_selected = 0; play_effect = (rand()%2)+1;}
         if(mon_cam == 8) {mon_cam = 5; action_selected = 0;}
-        if(mon_cam == 7) {mon_cam = 12; action_selected = 0;}
+        if(mon_cam == 7) {mon_cam = 12; action_selected = 0; play_effect = (rand()%2)+1;}
         if(mon_cam == 5 && picrandom == 0) {mon_cam = 4; action_selected = 0;}
-        if(mon_cam == 5 && picrandom == 1) {mon_cam = 13; action_selected = 0;}
+        if(mon_cam == 5 && picrandom == 1) {mon_cam = 13; action_selected = 0; play_effect = (rand()%2)+1;}
         if(mon_cam == 2 && picrandom == 0) {mon_cam = 0; attack_stage = 1; action_selected = 0;}
-        if(mon_cam == 2 && picrandom == 1) {mon_cam = 15; action_selected = 0;}
+        if(mon_cam == 2 && picrandom == 1) {mon_cam = 15; action_selected = 0; play_effect = (rand()%2)+1;}
     }
     if(action_selected > 2){
         if(mon_cam == 6) {mon_cam = 5; action_selected = 0;}
@@ -853,16 +872,16 @@ void AC_calc(){ // yes, rewriting everything
         if(attack_stage == 4 && isControlPanelOpen) {/* ROLL DOWN PANEL AND DIE */ isJumpscare = true;}
         if(attack_stage == 4 && camButton_alpha == 50) {/* SPRINGTRAP RUN TO THE OTHERSIDE, ROLL DOWN THE CAMS AND DIE */ isJumpscare = true;}
         if(attack_stage == 4 && !ScreenOpen && x < (-HALF_REGION + 30)) {/* PAN TO THE LEFT AND DIE */ isJumpscare = true;}
-        if(mon_cam == 11 && closed_vent == 11) {mon_cam = 9; action_selected = 0;}
-        if(mon_cam == 11 && closed_vent != 11) {mon_cam = 0; attack_stage = 3; action_selected = 0;}
-        if(mon_cam == 12 && closed_vent == 12) {mon_cam = 7; action_selected = 0;}
-        if(mon_cam == 12 && closed_vent != 12) {mon_cam = 0; attack_stage = 3; action_selected = 0;}   
-        if(mon_cam == 13 && closed_vent == 13) {mon_cam = 5; action_selected = 0;}
-        if(mon_cam == 13 && closed_vent != 13) {mon_cam = 0; attack_stage = 1; action_selected = 0;}  
-        if(mon_cam == 14 && closed_vent == 14) {mon_cam = 10; action_selected = 0;}
-        if(mon_cam == 14 && closed_vent != 14) {/* DIE */ isJumpscare = true;}      
-        if(mon_cam == 15 && closed_vent == 15) {mon_cam = 2; action_selected = 0;}
-        if(mon_cam == 15 && closed_vent != 15) {/* DIE */ isJumpscare = true;}         
+        if(mon_cam == 11 && closed_vent == 11) {mon_cam = 9; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 11 && closed_vent != 11) {mon_cam = 0; attack_stage = 3; action_selected = 0; play_effect = (rand()%2)+3;}
+        if(mon_cam == 12 && closed_vent == 12) {mon_cam = 7; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 12 && closed_vent != 12) {mon_cam = 0; attack_stage = 3; action_selected = 0; play_effect = (rand()%2)+3;}   
+        if(mon_cam == 13 && closed_vent == 13) {mon_cam = 5; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 13 && closed_vent != 13) {mon_cam = 0; attack_stage = 1; action_selected = 0; play_effect = (rand()%2)+3;}  
+        if(mon_cam == 14 && closed_vent == 14) {mon_cam = 10; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 14 && closed_vent != 14) {/* DIE */ isJumpscare = true; play_effect = (rand()%2)+3;}      
+        if(mon_cam == 15 && closed_vent == 15) {mon_cam = 2; action_selected = 0; play_effect = (rand()%2)+1;}
+        if(mon_cam == 15 && closed_vent != 15) {/* DIE */ isJumpscare = true; play_effect = (rand()%2)+3;}         
     }
 }
 
@@ -925,6 +944,8 @@ void sealVent(){
         vent_g = 1000;
         vent_f = 0;
         isSealing = false;
+        done = SM_LoadAudio("done.wav");
+        SM_PlayAudio(done, 50, 50, false, true, 0);
     }
     
     if(vent_g == 1000){
@@ -1223,6 +1244,12 @@ void playLure(){
     }
 }
 
+s32  my_reader(void *fp,void *dat, s32 size) // found this on a forum for the mp3 player thingy
+{
+	return fread(dat, 1, size, fp);
+}
+
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -1236,8 +1263,29 @@ int gameSceneMain(){
     if(NIGHT!=1){
         mon_cam = (rand() % 5) + 6;
     }
+    FILE *night_call;
     SM_PlayAudio(tablefan, 127, 127, true, false, 0);
     SM_PlayAudio(Desolate_Underworld2, 127, 127, true, false, 0);
+    if(NIGHT==1){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night1final.mp3", "r");
+    }
+    if(NIGHT==2){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night2final2.mp3", "r");
+    }
+    if(NIGHT==3){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night3final.mp3", "r");
+    }
+    if(NIGHT==4){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night4final.mp3", "r");
+    }
+    if(NIGHT==5){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night5final.mp3", "r");
+    }
+    if(NIGHT==6){
+        night_call = fopen("sd:/fnaf3/assets/sounds/night6final.mp3", "r");
+    }
+    MP3Player_PlayFile(night_call, my_reader, NULL);
+    //fclose(night_call);
     while (1)
     {
         if(time_am == 6){
@@ -1266,6 +1314,26 @@ int gameSceneMain(){
                 FreeImgAnim(&BB);
             }
         }
+        if(play_effect == 1 && !isPlay1){
+            vent_quiet1 = SM_LoadAudio("vent_quiet1.wav");
+            SM_PlayAudio(vent_quiet1, 50, 50, false, true, 0);
+            isPlay1 = true;
+        }
+        if(play_effect == 2 && !isPlay2){
+            vent_quiet2 = SM_LoadAudio("vent_quiet2.wav");
+            SM_PlayAudio(vent_quiet2, 50, 50, false, true, 0);
+            isPlay2 = true;
+        }
+        if(play_effect == 3 && !isPlay3){
+            vent_closer1 = SM_LoadAudio("vent_closer1.wav");
+            SM_PlayAudio(vent_closer1, 50, 50, false, true, 0);
+            isPlay3 = true;
+        }
+        if(play_effect == 4 && !isPlay4){
+            vent_closer2 = SM_LoadAudio("vent_closer2.wav");
+            SM_PlayAudio(vent_closer2, 50, 50, false, true, 0);
+            isPlay4 = true;
+        }
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
         Stage1_2();
@@ -1284,8 +1352,11 @@ int gameSceneMain(){
             GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         }
         drawCamStatic();
-        if(isSealing){
+        if(isSealing && !ventilationError){
             sealVent();
+        }
+        if(ventilationError){
+            closed_vent = 0;
         }
         if(blip_f < 4){
             drawBlip();
@@ -1354,8 +1425,8 @@ int gameSceneMain(){
             if(!PanelButtonVisible && !isRebooting){
                 if(panelSelect == 4){
                     isControlPanelOpen = 2;
-                    lever1 = SM_LoadAudio("lever1.wav");
-                    SM_PlayAudio(lever1, 127, 127, false, true, 0);
+                    lever2 = SM_LoadAudio("lever2.wav");
+                    SM_PlayAudio(lever2, 127, 127, false, true, 0);
                 }
                 if(panelSelect == 0) {
                     isRebootingAudio = true;
@@ -1412,6 +1483,7 @@ int gameSceneMain(){
                     }                 
                 }
                 if(IsCursorWithinImg(CamLayoutNmb.frames[19], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[19]->w)/2), 381+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[19]->h)/2)) && camButton_alpha == 50){ // for map toggle, SON :sob:
+                    SM_PlayAudio(select_sound, 127, 127, false, false, 0);
                     if(camLayoutSelection == 0){
                         selected_cam = 11;
                     }else{selected_cam = 2;}
