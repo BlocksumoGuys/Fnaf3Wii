@@ -2,10 +2,10 @@
 
 #define IMG_SCALE 1
 #define MAX_FRAMES 34
-#define NIGHT 1
 #define DEBUG false
 
 #define WARNING_IMG "sd:/fnaf3/assets/images/329.png"
+#define SD_SAVE "sd:/fnaf3/fnaf3save.save"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -47,7 +47,9 @@ typedef struct
     bool loaded[MAX_FRAMES];
 }IMG_Anim2;
 
-
 void FreeImgAnim(IMG_Anim* img_a);
 void FreeAllImgAnim2(IMG_Anim2* img_a);
 void FreeOneImgAnim2(IMG_Anim2* img_a, u8 i);
+GRRLIB_texImg *GRRLIB_FakeLoad(const char* path);
+char* read_line(const char *path, int target_line);
+void write_line(const char *path, int target_line, const char *new_text);

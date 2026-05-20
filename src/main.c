@@ -61,6 +61,13 @@ u8* loadBuf(const char* path, s32* sizeOut) {
     return buffer;
 }
 
+GRRLIB_texImg *GRRLIB_FakeLoad(const char* path){
+    GRRLIB_texImg *tex_img = GRRLIB_LoadTextureFromFile(path);
+    if(tex_img){
+        return tex_img;
+    }
+}
+
 
 int main(int argc, char *argv[]){
     fatInitDefault();
@@ -70,8 +77,8 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    gameSceneMain();
-    //warningSceneMain();
+    //gameSceneMain();
+    warningSceneMain();
     //menuSceneMain();
     //adSceneMain();
     GRRLIB_Exit();

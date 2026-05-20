@@ -8,6 +8,7 @@
 #define CONTROL_PANEL_X 266
 #define CONTROL_PANEL_Y 453
 #define STRIP_W 4
+u8 NIGHT = 0;
 char buffer[100];
 float x = 0;
 float tx = 0.0f;
@@ -183,7 +184,7 @@ bool isPlay2;
 bool isPlay3;
 bool isPlay4;
 
-u8 nextScene = 0;
+int nextScene = -1;
 
 const char *sp_cams_arr[33] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -271,13 +272,6 @@ void DrawWarpedScene(){
         float y = (SCREEN_H - h) * 0.5f;
         GRRLIB_DrawPart(sx, y, sx, 0, STRIP_W, SCREEN_H, sceneTex, 0, 1.0f, scaleY, 0xFFFFFFFF);
     }
-}
-
-GRRLIB_texImg *GRRLIB_FakeLoad(const char* path){
-    GRRLIB_texImg *tex_img = GRRLIB_LoadTextureFromFile(path);
-    if(tex_img){
-        return tex_img;
-    }else{time_am = 6; return NULL;}
 }
 
 void InitAllImg(){
@@ -1449,6 +1443,13 @@ void chica_calc(){
 }
 
 int gameSceneMain(){
+    char* night_text = read_line(SD_SAVE, 0);
+    if (strcmp(night_text, "NIGHT_NMB=1") == 0) NIGHT = 1;
+    else if (strcmp(night_text, "NIGHT=2") == 0) NIGHT = 2;
+    else if (strcmp(night_text, "NIGHT=3") == 0) NIGHT = 3;
+    else if (strcmp(night_text, "NIGHT=4") == 0) NIGHT = 4;
+    else if (strcmp(night_text, "NIGHT=5") == 0) NIGHT = 5;
+    else if (strcmp(night_text, "NIGHT=6") == 0) NIGHT = 6;
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();

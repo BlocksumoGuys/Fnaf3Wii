@@ -1,4 +1,5 @@
 #include "main.h"
+u8 NIGHT_NMB = 1;
 
 void createBlipFlashOnce(IMG_Anim *img, u8 *counter){
     if(*counter >= 8){return;}
@@ -7,10 +8,17 @@ void createBlipFlashOnce(IMG_Anim *img, u8 *counter){
 }
 
 void createNightNmb(IMG_Anim *img, u8 *alpha){
-    GRRLIB_DrawImg(CenterX(img->frames[NIGHT]), CenterY(img->frames[NIGHT]), img->frames[NIGHT], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + *alpha);
+    GRRLIB_DrawImg(CenterX(img->frames[NIGHT_NMB]), CenterY(img->frames[NIGHT_NMB]), img->frames[NIGHT_NMB], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00 + *alpha);
 }
 
 int curr_nightSceneMain(){
+    char* night_text = read_line(SD_SAVE, 0);
+    if (strcmp(night_text, "NIGHT=1") == 0) NIGHT_NMB = 1;
+    else if (strcmp(night_text, "NIGHT=2") == 0) NIGHT_NMB = 2;
+    else if (strcmp(night_text, "NIGHT=3") == 0) NIGHT_NMB = 3;
+    else if (strcmp(night_text, "NIGHT=4") == 0) NIGHT_NMB = 4;
+    else if (strcmp(night_text, "NIGHT=5") == 0) NIGHT_NMB = 5;
+    else if (strcmp(night_text, "NIGHT=6") == 0) NIGHT_NMB = 6;
     u64 frame = 0;
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();

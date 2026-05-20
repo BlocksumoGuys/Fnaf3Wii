@@ -127,8 +127,71 @@ void drawPointer(){
     GRRLIB_DrawImg(ir2.x, IR2_Y, pointer, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
 }
 
+void write_line(const char *path, int target_line, const char *new_text) {
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    char lines[100][256];
+    int count = 0;
+    while (count < 100 && fgets(lines[count], sizeof(lines[count]), f)) {
+        count++;
+    }
+    fclose(f);
+    if (target_line < count) {
+        snprintf(lines[target_line], sizeof(lines[target_line]), "%s\n", new_text);
+    }
+    f = fopen(path, "w");
+    if (!f) return;
+    for (int i = 0; i < count; i++) {
+        fputs(lines[i], f);
+    }
+    fclose(f);
+}
+
+void create_save(const char *path){
+    u8 file_exist = 0;
+    FILE *temp_save = fopen(path, "r");
+    if(temp_save){
+        fclose(temp_save);
+        file_exist = 1;
+    }
+    if(!file_exist){
+        FILE *save = fopen(path, "w");
+        if(save){
+            fputs("NIGHT=1\n", save);
+            fclose(save);
+        }
+    }
+}
+
+char* read_line(const char *path, int target_line) {
+    FILE *f = fopen(path, "r");
+    if (!f) return NULL;
+
+    static char buffer[256];
+    memset(buffer, 0, sizeof(buffer)); 
+    
+    int current = 0;
+
+    while (fgets(buffer, sizeof(buffer), f)) {
+        if (current == target_line) {
+            fclose(f);
+            int len = strlen(buffer);
+            while (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r' || buffer[len - 1] == ' ')) {
+                buffer[len - 1] = '\0';
+                len--;
+            }
+            
+            return buffer;
+        }
+        current++;
+    }
+
+    fclose(f);
+    return NULL;
+}
 int menuSceneMain(){
     u64 frame = 0;
+    u8 menu_night = 0;
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     IMG_Anim static_spr = {0};
@@ -179,6 +242,15 @@ int menuSceneMain(){
     green_lines.frames[14] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1042.png");
     green_lines.frames[15] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/1043.png");
 
+    IMG_Anim NightTimeFont = {0};
+    NightTimeFont.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/746.png"); // 0
+    NightTimeFont.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/747.png"); // 1
+    NightTimeFont.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/748.png"); // 2
+    NightTimeFont.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/749.png"); // 3
+    NightTimeFont.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/750.png"); // 4
+    NightTimeFont.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/751.png"); // 5
+    NightTimeFont.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/752.png"); // 6
+
     GreenLine_t green_line1 = createGreenLineObj();
     GreenLine_t green_line2 = createGreenLineObj();
     GreenLine_t green_line3 = createGreenLineObj();
@@ -203,6 +275,15 @@ int menuSceneMain(){
     u8 cursor_f = 0;
     bool pastCursor = false;
     bool isQuitting = false;
+    create_save(SD_SAVE);
+    //char* night_text = "a";
+    char* night_text = read_line(SD_SAVE, 0);
+    if (strcmp(night_text, "NIGHT=1") == 0) menu_night = 1;
+    else if (strcmp(night_text, "NIGHT=2") == 0) menu_night = 2;
+    else if (strcmp(night_text, "NIGHT=3") == 0) menu_night = 3;
+    else if (strcmp(night_text, "NIGHT=4") == 0) menu_night = 4;
+    else if (strcmp(night_text, "NIGHT=5") == 0) menu_night = 5;
+    else if (strcmp(night_text, "NIGHT=6") == 0) menu_night = 6;
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     srand(time(NULL));
     while(1){
@@ -236,6 +317,9 @@ int menuSceneMain(){
         if(cursor_f != pastCursor){
             pastCursor = cursor_f; // for future audio
         }
+        if(cursor_f == 1){
+            GRRLIB_DrawImg(load_game->w+70, 327 + load_game->h - 20, NightTimeFont.frames[menu_night], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
         createScottCredit(scott_credits);
         createBlipFlash(&blipflash_spr, &blipflash_altA, &blipflash_f, &frame);
         createStatic(&static_spr, &static_f);
@@ -244,7 +328,7 @@ int menuSceneMain(){
         frame++;
         GRRLIB_Render();
         if(IsCursorWithinImg2(new_game, 60, 282)){cursor_f = 0;}
-        if(IsCursorWithinImg2(new_game, 60, 327)){cursor_f = 1;}
+        if(IsCursorWithinImg2(load_game, 60, 327)){cursor_f = 1;}
         if(mote & WPAD_BUTTON_HOME){
             isQuitting = true;
             break;
@@ -261,8 +345,10 @@ int menuSceneMain(){
     FreeImgAnim(&static_spr);
     FreeImgAnim(&springtrap_spr);
     FreeImgAnim(&green_lines);
+    FreeImgAnim(&NightTimeFont);
     if(!isQuitting){
         if(cursor_f == 0){
+            write_line(SD_SAVE, 0, "NIGHT=1");
             adSceneMain();
         }
         else{
