@@ -51,6 +51,12 @@ bool canPuppetSpawn = true;
 bool isPuppetAttacking = false;
 bool puppetLoaded = false;
 bool BBcamLoaded = false;
+bool hasChicaCamSpawned = false; // change to false
+bool hasChicaOfficeSpawned = false;
+bool canChicaSpawn = true;
+bool isChicaJumpscaring = false;
+u8 chica_f = 0;
+u8 chica_alpha = 255;
 u8 panelSelect = 0;
 float IR_Y;
 u8 time_am = 12;
@@ -84,6 +90,7 @@ IMG_Anim BB = {0};
 IMG_Anim freddy = {0};
 IMG_Anim freddy_jumpscare = {0};
 IMG_Anim lureLoad = {0};
+IMG_Anim chica = {0};
 u8 freddy_f = 0;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
@@ -132,6 +139,7 @@ u8 freddy_alpha = 255;
 int lureDelay = 0;
 u64 PuppetCamCounter = 0;
 u64 PuppetOfficeCounter = 0;
+u64 chicaCounter = 0;
 
 s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
 s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
@@ -162,7 +170,7 @@ bool isPlay2;
 bool isPlay3;
 bool isPlay4;
 
-const char *sp_cams_arr[29] = {
+const char *sp_cams_arr[33] = {
     "sd:/fnaf3/assets/images/295.png",
     "sd:/fnaf3/assets/images/132.png",
     "sd:/fnaf3/assets/images/133.png",
@@ -192,9 +200,13 @@ const char *sp_cams_arr[29] = {
     "sd:/fnaf3/assets/images/298.png",
     "sd:/fnaf3/assets/images/300.png",
     "sd:/fnaf3/assets/images/298.png" // phantom puppet
+    "sd:/fnaf3/assets/images/387.png", // phantom chica
+    "sd:/fnaf3/assets/images/388.png",
+    "sd:/fnaf3/assets/images/389.png",
+    "sd:/fnaf3/assets/images/388.png" // phantom chica
 };
 
-const char *nt_cams_arr[29] = {
+const char *nt_cams_arr[33] = {
     "sd:/fnaf3/assets/images/106.png", // 106
     "sd:/fnaf3/assets/images/97.png", // 97
     "sd:/fnaf3/assets/images/103.png", // 103
@@ -223,7 +235,11 @@ const char *nt_cams_arr[29] = {
     "sd:/fnaf3/assets/images/297.png", // phantom puppet
     "sd:/fnaf3/assets/images/298.png",
     "sd:/fnaf3/assets/images/300.png",
-    "sd:/fnaf3/assets/images/298.png" // phantom puppet
+    "sd:/fnaf3/assets/images/298.png", // phantom puppet
+    "sd:/fnaf3/assets/images/387.png", // phantom chica
+    "sd:/fnaf3/assets/images/388.png",
+    "sd:/fnaf3/assets/images/389.png",
+    "sd:/fnaf3/assets/images/388.png" // phantom chica
 };
 
 bool IsCursorWithinImg(GRRLIB_texImg *img, int x, int y){
@@ -319,6 +335,18 @@ void InitAllImg(){
     loadGreen.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/632.png");
     loadGreen.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/637.png"); // seal green bean
 
+    chica.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/399.png");
+    chica.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/428.png");
+    chica.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/434.png");
+    chica.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/439.png");
+    //chica.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/428.png");
+    chica.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/459.png");
+    chica.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/462.png");
+    chica.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/464.png");
+    chica.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/466.png");
+    chica.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/385.png");
+    chica.loaded = false; // NEEDS TO BE FALSE
+
     mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
@@ -394,6 +422,7 @@ void drawCams(){
         break;
     case 7:
         v = cam7_f + 9;
+        if(hasChicaCamSpawned){v = cam7_f + 29;}
         if(selected_cam == mon_cam){
             dcv(v, 0);
             GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, springtrap_cams.frames[v], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); // for anims
@@ -1375,6 +1404,22 @@ void Puppet_calc(){
     if(isCamOpen && selected_cam == 8 && hasPuppetSpawned) {PuppetCamCounter++;}
 }
 
+void chica_calc(){
+    if((selected_cam != 7 || !isCamOpen) && hasChicaCamSpawned){
+        if(chicaCounter > 0){
+            chicaCounter = 0;
+            hasChicaCamSpawned = false;
+            canChicaSpawn = true;
+        }
+        return;
+    }
+    if(chicaCounter >= BB_Ai[NIGHT-1]){
+        canChicaSpawn = false;
+        hasChicaOfficeSpawned = true;
+    }
+    if(selected_cam == 7 && hasChicaCamSpawned && isCamOpen){chicaCounter++;}
+}
+
 int gameSceneMain(){
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     GRRLIB_FillScreen(0x000000FF);
@@ -1421,10 +1466,10 @@ int gameSceneMain(){
         WPAD_IR(0, &ir);
         SM_UpdateAudio();
         IR_Y = ir.y * (480.0f / 460.0f);
-        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking){
+        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking || isChicaJumpscaring){
             canPan = false;
         }
-        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring && !isPuppetAttacking){
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring && !isPuppetAttacking && !isChicaJumpscaring){
             canPan = true;
         }
         if(isCamOpen || isControlPanelOpen){
@@ -1472,6 +1517,39 @@ int gameSceneMain(){
         drawControlPanel();
         BB_calc();
         Puppet_calc();
+        chica_calc();
+        if(hasChicaOfficeSpawned && x >= -500){
+            hasChicaOfficeSpawned = false;
+            isChicaJumpscaring = true;
+        }
+        if(isChicaJumpscaring){
+            if(!chica.loaded){
+                chica.loaded = true;
+                SM_PlayAudio(scream3, 200, 200, false, false, 0);
+            }
+            if(x < 0){
+                if(x > 0){x = 0;}
+                x+=20;
+            }
+            GRRLIB_DrawImg(x, SCREEN_H-(chica.frames[chica_f]->h), chica.frames[chica_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+chica_alpha);
+            if(frame%5==0 && chica_f < 8){
+                chica_f++;
+            }
+            if(chica_f==8){
+                chica_alpha-=5;
+                ventHealth = 0;
+            }
+            if(chica_alpha <= 0){
+                if(chica.loaded){
+                    chica.loaded = false;
+                    FreeImgAnim(&chica);
+                }
+                isChicaJumpscaring = false;
+                canChicaSpawn = false;
+                hasChicaCamSpawned = false;
+                hasChicaOfficeSpawned = false;
+            }
+        }
         drawCamPanel();
         drawCams();
         if(selected_cam == BBSpawn && isCamOpen && !videoError){
@@ -1733,6 +1811,9 @@ int gameSceneMain(){
             if(canPuppetSpawn && selected_cam != 8 && !hasPuppetSpawned && !isPuppetAttacking && time_am != 12 && (rand()%10)+1 <= Springtrap_AI[NIGHT-1] && NIGHT >= 4){
                 hasPuppetSpawned = true;
             }
+            if(canChicaSpawn && selected_cam != 7 && !hasChicaCamSpawned && !isChicaJumpscaring && time_am != 12 && (rand()%10)+1 <= Springtrap_AI[NIGHT-1] && NIGHT >= 3){
+                hasChicaCamSpawned = true;
+            }
         }
         if(frame%(60*60)==0){ // global 1 minute timer
             if((rand()%12)+1 <= Springtrap_AI[NIGHT-1] && time_am != 12 && NIGHT >= 3 && canFreddySpawn){
@@ -1746,11 +1827,14 @@ int gameSceneMain(){
         if(time_am == 5 && canMangleSpawn && !videoError && NIGHT!=1){ // force spawn mangle at 5 am
             hasMangleSpawned = true;
         }
-        if(time_am == 4 && NIGHT >= 3 && canFreddySpawn && !hasFreddySpawned){
+        if(time_am == 4 && NIGHT >= 3 && canFreddySpawn && !hasFreddySpawned){ // force spawn freddy at 4 am
             hasFreddySpawned = true;
         }
-        if(time_am == 5 && NIGHT >= 4 && canPuppetSpawn && !hasPuppetSpawned && !isPuppetAttacking){
+        if(time_am == 5 && NIGHT >= 4 && canPuppetSpawn && !hasPuppetSpawned && !isPuppetAttacking){ // force spawn puppet at 5 am
             hasPuppetSpawned = true;
+        }
+        if(time_am == 5 && canChicaSpawn && !hasChicaCamSpawned && !isChicaJumpscaring && NIGHT >= 3){
+            hasChicaCamSpawned = true;
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
         if(time_am >= 4){
