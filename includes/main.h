@@ -2,7 +2,7 @@
 
 #define IMG_SCALE 1
 #define MAX_FRAMES 34
-#define NIGHT 6
+#define NIGHT 1
 #define DEBUG false
 
 #define WARNING_IMG "sd:/fnaf3/assets/images/329.png"

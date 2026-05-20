@@ -124,6 +124,7 @@ int audioProgress = 0;
 int allProgress = 0;
 u64 CamErrorTimer = 0;
 u64 VentErrorTimer = 0;
+u64 VentErrorTimer2 = 0;
 bool MapLayoutNormalMode = false;
 
 int move_counter = 0; // for sprintrap ai
@@ -148,6 +149,7 @@ int lureDelay = 0;
 u64 PuppetCamCounter = 0;
 u64 PuppetOfficeCounter = 0;
 u64 chicaCounter = 0;
+u64 IdleCounter = 0;
 
 s8 x_pad = -30; // FOR CAM LAYOUT BUTTONS
 s8 y_pad = 0; // FOR CAM LAYOUT BUTTONS
@@ -172,11 +174,16 @@ int done;
 int scream3;
 int garble1;
 int mask_sound;
+int danger2b;
+int stop_sound;
 u8 play_effect;
+u8 echo;
 bool isPlay1;
 bool isPlay2;
 bool isPlay3;
 bool isPlay4;
+
+u8 nextScene = 0;
 
 const char *sp_cams_arr[33] = {
     "sd:/fnaf3/assets/images/295.png",
@@ -373,6 +380,8 @@ void InitAllImg(){
     static_sound = SM_LoadAudio("static_sound.wav");
     select_sound = SM_LoadAudio("select.wav");
     scream3 = SM_LoadAudio("scream3.wav");
+    danger2b = SM_LoadAudio("danger2b.wav");
+    SM_PlayAudio(danger2b, 0, 0, true, false, 0);
 }
 
 void dcv(int v, bool mode){
@@ -857,32 +866,33 @@ void drawBackdrop(){
 void jumpscare(){
     if(camButton_alpha == 50){isCamOpen = false;}
     if(!springtrap_jumpscare.loaded){
-        springtrap_jumpscare.frames[0] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/792.png");
-        springtrap_jumpscare.frames[1] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/794.png");
-        springtrap_jumpscare.frames[2] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/796.png");
-        springtrap_jumpscare.frames[3] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/798.png");
-        springtrap_jumpscare.frames[4] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/800.png");
-        springtrap_jumpscare.frames[5] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/802.png");
-        springtrap_jumpscare.frames[6] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/804.png");
-        springtrap_jumpscare.frames[7] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/806.png");
-        springtrap_jumpscare.frames[8] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/825.png");
-        springtrap_jumpscare.frames[9] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/822.png");
-        springtrap_jumpscare.frames[10] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/820.png");
-        springtrap_jumpscare.frames[11] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/817.png");
-        springtrap_jumpscare.frames[12] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/815.png");
-        springtrap_jumpscare.frames[13] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/813.png");
-        springtrap_jumpscare.frames[14] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/811.png");
-        springtrap_jumpscare.frames[15] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/809.png");
+        springtrap_jumpscare.frames[0] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/778.png");
+        springtrap_jumpscare.frames[1] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/779.png");
+        springtrap_jumpscare.frames[2] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/782.png");
+        springtrap_jumpscare.frames[3] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/785.png");
+        springtrap_jumpscare.frames[4] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/788.png"); // 11
+        springtrap_jumpscare.frames[5] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/791.png"); // 14
+        springtrap_jumpscare.frames[6] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/674.png"); // 17
+        springtrap_jumpscare.frames[7] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/671.png"); // 20
+        springtrap_jumpscare.frames[8] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/668.png"); // 23
+        springtrap_jumpscare.frames[9] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/663.png"); // 26
+        springtrap_jumpscare.frames[10] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/636.png"); // 29
+        springtrap_jumpscare.frames[11] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/631.png"); // 32
+        springtrap_jumpscare.frames[12] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/679.png"); // 35
+        springtrap_jumpscare.frames[13] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/680.png"); // 38
+        springtrap_jumpscare.frames[14] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/691.png"); // 40
+        springtrap_jumpscare.frames[15] =  GRRLIB_FakeLoad("sd:/fnaf3/assets/images/692.png"); // 41
         springtrap_jumpscare.loaded = true;
+        SM_PlayAudio(scream3, 200, 200, false, true, 0);
     }
     isControlPanelOpen = 2;
     static u8 sp_j = 0;
     GRRLIB_DrawImg(0, SCREEN_H - (springtrap_jumpscare.frames[sp_j]->h), springtrap_jumpscare.frames[sp_j], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-    if(frame%4==0 && sp_j < 15){
+    if(frame%5==0 && sp_j < 15){
         sp_j++;
     }
     if(sp_j >= 15){
-        time_am = 6;
+        nextScene = 0;
     }
 }
 
@@ -1522,6 +1532,11 @@ int gameSceneMain(){
             SM_PlayAudio(vent_closer2, 50, 50, false, true, 0);
             isPlay4 = true;
         }
+        if(mon_cam == 13 || mon_cam == 5 || mon_cam == 3 || mon_cam == 5){
+            SM_ChangeVolume(danger2b, 50, 50);
+        }else if(mon_cam == 1 || mon_cam == 2 || attack_stage > 0){
+            SM_ChangeVolume(danger2b, 100, 100);
+        }else{SM_ChangeVolume(danger2b, 0, 0);}
         //if(attack_stage > 0){mon_cam = 0;} // fail safe, might remove if its broken
         drawBackdrop();
         Stage1_2();
@@ -1671,6 +1686,8 @@ int gameSceneMain(){
         }else{
             if(!destroyedMute){
                 GRRLIB_FreeTexture(mute);
+                stop_sound = SM_LoadAudio("stop.wav");
+                SM_PlayAudio(stop_sound, 50, 50, false, true, 0);
                 destroyedMute = true;
             }
         }
@@ -1686,9 +1703,9 @@ int gameSceneMain(){
         //float used_heap = (float)mi.uordblks / 1024 / 1024;
         //float free_heap = (float)mi.fordblks / 1024 / 1024;
         //sprintf(buffer, "%.2f, %.2f", used_heap, free_heap);
-        sprintf(buffer, "%f", x);
+        //sprintf(buffer, "%f", x);
         //sprintf(buffer, "%d, %d, %d, %d", hasFreddyDukedDown, isFreddyJumpscaring, freddyjumpscare_f, freddy_alpha);
-        GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
+        //GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
             if(canPanelButtonBeClicked){
                 if(IsCursorWithinImg(panelClick, CONTROL_PANEL_X - (panelClick->w / 2), CONTROL_PANEL_Y - (panelClick->h))){
@@ -1773,6 +1790,19 @@ int gameSceneMain(){
                     camLayoutSelection = !camLayoutSelection;
                 }
                 if(IsCursorWithinImg(CamLayoutNmb.frames[18], 268 + ((CamLayoutNmb.frames[17]->w-CamLayoutNmb.frames[18]->w)/2), 332+((CamLayoutNmb.frames[17]->h-CamLayoutNmb.frames[18]->h)/2)) && canPlayLure && camLayoutSelection == 0 && !isLurePlaying && isCamOpen && audioHealth > 0 && !audioError){ // for audio lures
+                    if(echo == 0){
+                        int echo_sound = SM_LoadAudio("echo1.wav");
+                        SM_PlayAudio(echo_sound, 100, 100, false, true, 0);
+                    }
+                    if(echo == 1){
+                        int echo_sound = SM_LoadAudio("echo3b.wav");
+                        SM_PlayAudio(echo_sound, 100, 100, false, true, 0);
+                    }
+                    if(echo == 2){
+                        int echo_sound = SM_LoadAudio("echo4b.wav");
+                        SM_PlayAudio(echo_sound, 100, 100, false, true, 0);
+                    }
+                    echo = (echo + 1) % 3;
                     isLurePlaying = true;
                     audioHealth -= Springtrap_AI[NIGHT-1];
                 }
@@ -1811,15 +1841,14 @@ int gameSceneMain(){
                     camHealth -= Springtrap_AI[NIGHT - 1];
                     CamErrorTimer = 0;
                 }
-            }else{
-                VentErrorTimer++;
-                if(NIGHT == 2 && VentErrorTimer >= (60*12)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
-                if(NIGHT == 3 && VentErrorTimer >= (60*10)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
-                if(NIGHT == 4 && VentErrorTimer >= (60*9)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
-                if(NIGHT == 5 && VentErrorTimer >= (60*8)) {ventHealth-=Springtrap_AI[NIGHT - 1]; VentErrorTimer = 0;}
             }
         }
         if(frame%60==0){ //global each second timer
+            VentErrorTimer++;
+            if(NIGHT == 2 && VentErrorTimer >= (60*12)) {ventHealth--; VentErrorTimer = 0;}
+            if(NIGHT == 3 && VentErrorTimer >= (60*10)) {ventHealth--; VentErrorTimer = 0;}
+            if(NIGHT == 4 && VentErrorTimer >= (60*9)) {ventHealth--; VentErrorTimer = 0;}
+            if(NIGHT == 5 && VentErrorTimer >= (60*8)) {ventHealth--; VentErrorTimer = 0;}
             MapLayoutNormalMode = !MapLayoutNormalMode;
             if(move_counter>(10 - Springtrap_AI[NIGHT-1] - aggresive)+((rand()%16)-total_turns)){ // ai blabla
                 action_selected = rand() % (3 + aggresive + 1);
@@ -1893,6 +1922,7 @@ int gameSceneMain(){
             hasChicaCamSpawned = true;
         }
         // springtrap go to attack stage 2 when: looking at any screen and action selected = 2
+
         if(time_am >= 4){
             aggresive = true;
         }
@@ -1900,8 +1930,29 @@ int gameSceneMain(){
             lureDelay--;
         }
         if(time_am == 6){break;}
+        if(ventilationError){
+            static u8 blackout_dir = 1;
+            blackout_alpha += blackout_dir;
+            if (blackout_alpha <= 50) {
+                blackout_alpha = 50;
+                blackout_dir = 1;
+            }
+            else if (blackout_alpha >= 250) {   
+                blackout_alpha = 250;
+                blackout_dir = -1;
+            }
+        }else{if(blackout_alpha > 0){blackout_alpha--;}}
+        GRRLIB_Rectangle(0, 0, SCREEN_W, SCREEN_H, 0x0002000+blackout_alpha, true);
+        if(!ScreenOpen && !ventilationError){
+            VentErrorTimer2++;
+            if(frame%60==0 && VentErrorTimer2 >= (60*10)){ventHealth--;}
+        }
+        if(ScreenOpen){
+            VentErrorTimer2 = 0;
+        }
         drawCursor();
         GRRLIB_Render();
+        if(time_am == 6){break;}
         frame++;
         buttonCamDelay++;
         double_click_timer_vent++;
