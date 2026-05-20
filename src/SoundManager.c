@@ -31,6 +31,16 @@ void* SM_FreeAudio(int id){
     memset(&SM_List[id], 0, sizeof(SM_List[id]));
 }
 
+void* SM_FreeAllAudio(){
+    for(int id = 0; id < SM_MAX_AUDIO; id++){
+        if(ASND_StatusVoice(id)){
+            ASND_StopVoice(id);
+        }
+        free(SM_List[id].aud_b);
+        memset(&SM_List[id], 0, sizeof(SM_List[id]));
+    }
+}
+
 void SM_StopAudio(int id){
     ASND_StopVoice(id);
 }

@@ -1953,14 +1953,15 @@ int gameSceneMain(){
         }
         drawCursor();
         GRRLIB_Render();
-        if(time_am == 6){break;}
+        if(time_am == 6){nextScene = 1; break;}
+        if(nextScene != -1) break;
         frame++;
         buttonCamDelay++;
         double_click_timer_vent++;
     }
-    SM_StopAudio(tablefan);
-    SM_StopAudio(Desolate_Underworld2);
-    SM_StopAudio(static_sound);
+    SM_FreeAudio(tablefan);
+    SM_FreeAudio(Desolate_Underworld2);
+    SM_FreeAudio(static_sound);
     GRRLIB_FreeTexture(panelClick);
     GRRLIB_FreeTexture(camClick);
     GRRLIB_FreeTexture(sceneTex);
@@ -1985,6 +1986,14 @@ int gameSceneMain(){
     FreeImgAnim(&freddy);
     FreeImgAnim(&freddy_jumpscare);
     FreeImgAnim(&lureLoad);
+    GRRLIB_FreeTexture(bb_cam);
+    GRRLIB_FreeTexture(puppet);
+    GRRLIB_FreeTexture(mute);
+    GRRLIB_FreeTexture(font);
+    GRRLIB_FreeTexture(cursor);
     GRRLIB_FreeTexture(mangle);
+    FreeImgAnim(&foxy);
+    FreeImgAnim(&chica);
+    SM_FreeAllAudio();
     return 0;
 }

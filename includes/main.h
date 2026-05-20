@@ -26,6 +26,7 @@
 #include "ad.h"
 #include "curr_night.h"
 #include "game.h"
+#include "gameover.h"
 
 #include "font_png.h"
 #include "pointer_png.h"

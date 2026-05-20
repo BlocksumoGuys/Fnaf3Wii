@@ -40,10 +40,12 @@ int curr_nightSceneMain(){
     night_spr.frames[5] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/843.png");
     night_spr.frames[6] = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/844.png");
     u8 alpha = 255;
+    int startday = SM_LoadAudio("startday.wav");
+    SM_PlayAudio(startday, 127, 127, false, true, 0);
     while(1){
         WPAD_ScanPads();
         u32 mote = WPAD_ButtonsDown(0);
-
+        SM_UpdateAudio();
         createNightNmb(&night_spr, &alpha);
         if(frame >= 160){
             if(alpha > 0) {alpha-=3;}
@@ -59,6 +61,7 @@ int curr_nightSceneMain(){
     }
     FreeImgAnim(&blipflash_spr);
     FreeImgAnim(&night_spr);
+    SM_FreeAllAudio();
     gameSceneMain();
     return 0;
 }

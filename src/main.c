@@ -78,7 +78,8 @@ int main(int argc, char *argv[]){
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
     //gameSceneMain();
-    warningSceneMain();
+    //warningSceneMain();
+    gameoverSceneMain();
     //menuSceneMain();
     //adSceneMain();
     GRRLIB_Exit();

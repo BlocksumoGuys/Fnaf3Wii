@@ -5,6 +5,9 @@ GRRLIB_texImg *pointer = NULL;
 ir_t ir2;
 float IR2_Y;
 
+int titlemusic;
+int select_sound_menu;
+
 bool IsCursorWithinImg2(GRRLIB_texImg *img, int x, int y){
     if(ir2.x >= x && ir2.x <= x + img->w && IR2_Y >= y && IR2_Y <= y + img->h){return true;}
     return false;
@@ -284,12 +287,16 @@ int menuSceneMain(){
     else if (strcmp(night_text, "NIGHT=4") == 0) menu_night = 4;
     else if (strcmp(night_text, "NIGHT=5") == 0) menu_night = 5;
     else if (strcmp(night_text, "NIGHT=6") == 0) menu_night = 6;
+    titlemusic = SM_LoadAudio("titlemusic.wav");
+    select_sound_menu = SM_LoadAudio("select.wav");
+    SM_PlayAudio(titlemusic, 127, 127, true, false, 0);
     WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR);
     srand(time(NULL));
     while(1){
         WPAD_ScanPads();
         u32 mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir2);
+        SM_UpdateAudio();
         createSpringTrap(&springtrap_spr, &springtrap_f, &frame, &altA, &altB);
         createGreenLines(&green_lines, &green_line1.counter, &green_line1.random, &frame, 0, 50);
         createGreenLines(&green_lines, &green_line2.counter, &green_line2.random, &frame, 0, 80);
@@ -315,6 +322,7 @@ int menuSceneMain(){
         }
         createCursor(cursor, &cursor_f, &frame);
         if(cursor_f != pastCursor){
+            SM_PlayAudio(select_sound_menu, 100, 100, false, false, 0);
             pastCursor = cursor_f; // for future audio
         }
         if(cursor_f == 1){
@@ -346,6 +354,7 @@ int menuSceneMain(){
     FreeImgAnim(&springtrap_spr);
     FreeImgAnim(&green_lines);
     FreeImgAnim(&NightTimeFont);
+    SM_FreeAllAudio();
     if(!isQuitting){
         if(cursor_f == 0){
             write_line(SD_SAVE, 0, "NIGHT=1");
