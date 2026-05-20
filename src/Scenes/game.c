@@ -55,6 +55,13 @@ bool hasChicaCamSpawned = false; // change to false
 bool hasChicaOfficeSpawned = false;
 bool canChicaSpawn = true;
 bool isChicaJumpscaring = false;
+bool hasFoxySpawned = false; // change to false
+bool canFoxySpawn = true;
+bool isFoxyJumpscaring = false;
+bool hasSeenFoxy = false;
+int foxy_chance = 0;
+u8 foxy_f = 0;
+u8 foxy_alpha = 255;
 u8 chica_f = 0;
 u8 chica_alpha = 255;
 u8 panelSelect = 0;
@@ -91,6 +98,7 @@ IMG_Anim freddy = {0};
 IMG_Anim freddy_jumpscare = {0};
 IMG_Anim lureLoad = {0};
 IMG_Anim chica = {0};
+IMG_Anim foxy = {0};
 u8 freddy_f = 0;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
@@ -346,6 +354,16 @@ void InitAllImg(){
     chica.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/466.png");
     chica.frames[8] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/385.png");
     chica.loaded = false; // NEEDS TO BE FALSE
+
+    foxy.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/184.png");
+    foxy.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/183.png");
+    foxy.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/186.png");
+    foxy.frames[3] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/175.png");
+    foxy.frames[4] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/176.png");
+    foxy.frames[5] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/178.png");
+    foxy.frames[6] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/181.png");
+    foxy.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/182.png");
+    foxy.loaded = false; // NEEDS TO BE FALSE
 
     mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
@@ -1466,10 +1484,10 @@ int gameSceneMain(){
         WPAD_IR(0, &ir);
         SM_UpdateAudio();
         IR_Y = ir.y * (480.0f / 460.0f);
-        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking || isChicaJumpscaring){
+        if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking || isChicaJumpscaring || isFoxyJumpscaring){
             canPan = false;
         }
-        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring && !isPuppetAttacking && !isChicaJumpscaring){
+        if(camButton_alpha != 99 && camButton_alpha != 50 && isJumpscare == false && isControlPanelOpen != 1 && !IsBBJumpscaring && !isFreddyJumpscaring && !isPuppetAttacking && !isChicaJumpscaring && !isFoxyJumpscaring){
             canPan = true;
         }
         if(isCamOpen || isControlPanelOpen){
@@ -1511,6 +1529,36 @@ int gameSceneMain(){
         Mangle_calc();
         drawOffice();
         drawFan();
+        if(hasFoxySpawned){
+            if(x >= -522 && x <= -450){
+                hasSeenFoxy = true;
+            }
+            if(x > -450 && foxy_f != 7){
+                isFoxyJumpscaring = true;
+            }
+            GRRLIB_DrawImg(x+420-(foxy.frames[foxy_f]->w / 2), SCREEN_H-(foxy.frames[foxy_f]->h), foxy.frames[foxy_f], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFF00+foxy_alpha);
+            if(isFoxyJumpscaring){
+                canFoxySpawn = false;
+                if(!foxy.loaded){
+                    foxy.loaded = false;
+                    SM_PlayAudio(scream3, 200, 200, false, false, 0);
+                }
+                if(x < -115){
+                    if(x>-115){x = -115;}
+                    x+=20;
+                }
+            }
+            if(frame%7==0 && isFoxyJumpscaring && foxy_f < 7){
+                foxy_f++;
+            }
+            if(foxy_f == 7){
+                isFoxyJumpscaring = false;
+                if(foxy_alpha > 0){
+                    ventHealth = 0;
+                    foxy_alpha-=5;
+                }else{if(foxy.loaded){foxy.loaded = false; FreeImgAnim(&foxy);}}
+            }
+        }
         GRRLIB_Screen2Texture(0, 0, sceneTex, false);
         DrawWarpedScene(); //anything drew before this are getting warped
         drawPanelButton();
@@ -1634,11 +1682,11 @@ int gameSceneMain(){
         
         //sprintf(buffer, "%d, %d, %d, %d, %d, %d", mon_cam, action_selected, attack_stage, total_turns, isCamOpen, freddy_f);
         //sprintf(buffer, "%d, %d, %d, %d, %d", isRebootingAudio, isRebootingCam, isRebootingVent, isRebootingAll, isRebooting);
-        struct mallinfo mi = mallinfo();
-        float used_heap = (float)mi.uordblks / 1024 / 1024;
-        float free_heap = (float)mi.fordblks / 1024 / 1024;
-        sprintf(buffer, "%.2f, %.2f", used_heap, free_heap);
-        //sprintf(buffer, "%d", selected_cam == BBSpawn);
+        //struct mallinfo mi = mallinfo();
+        //float used_heap = (float)mi.uordblks / 1024 / 1024;
+        //float free_heap = (float)mi.fordblks / 1024 / 1024;
+        //sprintf(buffer, "%.2f, %.2f", used_heap, free_heap);
+        sprintf(buffer, "%f", x);
         //sprintf(buffer, "%d, %d, %d, %d", hasFreddyDukedDown, isFreddyJumpscaring, freddyjumpscare_f, freddy_alpha);
         GRRLIB_Printf(10, 10, font, 0xFFFFFFFF, IMG_SCALE, buffer);
         if(mote & WPAD_BUTTON_A){
@@ -1677,6 +1725,13 @@ int gameSceneMain(){
                     crank1 = SM_LoadAudio("crank1.wav");
                     SM_PlayAudio(crank1, 127, 127, false, true, 0);
                     isCamOpen = !isCamOpen;
+                    if(NIGHT == 2){foxy_chance = (rand()%1000)+1;}
+                    if(NIGHT == 3){foxy_chance = (rand()%50)+1;}
+                    if(NIGHT == 4){foxy_chance = (rand()%25)+1;}
+                    if(NIGHT >= 5){foxy_chance = (rand()%10)+1;}
+                    if(foxy_chance == 1 && canFoxySpawn && !hasFoxySpawned){
+                        hasFoxySpawned = true;
+                    }
                 }
             }
             if(camButton_alpha == 50){
@@ -1684,6 +1739,7 @@ int gameSceneMain(){
                     crank2 = SM_LoadAudio("crank2.wav");
                     SM_PlayAudio(crank2, 127, 127, false, true, 0);
                     isCamOpen = !isCamOpen;
+                    if(hasSeenFoxy){hasFoxySpawned = false; hasSeenFoxy = false;}
                 }
                 for(int i = 0; i < 10; i++){
                     if(camLayoutSelection == 0){
