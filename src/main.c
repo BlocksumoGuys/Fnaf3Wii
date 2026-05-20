@@ -75,13 +75,15 @@ int main(int argc, char *argv[]){
     WPAD_Init();
     ASND_Init();
     MP3Player_Init();
+    SM_Init();
     GRRLIB_FillScreen(0x000000FF);
     GRRLIB_Render();
-    //gameSceneMain();
+    gameSceneMain();
     //warningSceneMain();
-    gameoverSceneMain();
+    //gameoverSceneMain();
     //menuSceneMain();
     //adSceneMain();
+    //next_daySceneMain();
     GRRLIB_Exit();
     return 0;
 }

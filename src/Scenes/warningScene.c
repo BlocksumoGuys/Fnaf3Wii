@@ -10,7 +10,7 @@ int warningSceneMain(){
     bool isClicked = false;
     while(1){
         WPAD_ScanPads();
-        u32 mote = WPAD_ButtonsHeld(0);
+        u32 mote = WPAD_ButtonsDown(0);
         if(imgCheck(img)){
             GRRLIB_DrawImg(CenterX(img), CenterY(img), img, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); 
         }

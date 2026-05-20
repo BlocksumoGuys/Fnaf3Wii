@@ -100,6 +100,7 @@ IMG_Anim freddy_jumpscare = {0};
 IMG_Anim lureLoad = {0};
 IMG_Anim chica = {0};
 IMG_Anim foxy = {0};
+IMG_Anim error_status = {0};
 u8 freddy_f = 0;
 GRRLIB_texImg *cursor = NULL;
 GRRLIB_texImg *font = NULL;
@@ -366,6 +367,10 @@ void InitAllImg(){
     foxy.frames[7] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/182.png");
     foxy.loaded = false; // NEEDS TO BE FALSE
 
+    error_status.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/604.png");
+    error_status.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/608.png");
+    error_status.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/610.png");
+
     mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
@@ -504,6 +509,17 @@ void drawCams(){
         break;
     }
     //GRRLIB_DrawImg(SCREEN_W - (CamStatic.frames[0]->w * 825.0f/1024.0f) - 20, 68, BB.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF); for BB
+    if((frame/15)%2==0){
+        if(audioError){
+            GRRLIB_DrawImg(120, 80, error_status.frames[0], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+        if(videoError){
+            GRRLIB_DrawImg(120, 110, error_status.frames[1], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+        if(ventilationError){
+            GRRLIB_DrawImg(120, 140, error_status.frames[2], 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
+        }
+    }
     if(frame%25==0){
         cam2_f = (cam2_f + 1) % 2;
     }
@@ -1948,6 +1964,9 @@ int gameSceneMain(){
             VentErrorTimer2++;
             if(frame%60==0 && VentErrorTimer2 >= (60*10)){ventHealth--;}
         }
+        if(mote & WPAD_BUTTON_HOME){
+            nextScene = 2;
+        }
         if(ScreenOpen){
             VentErrorTimer2 = 0;
         }
@@ -1994,6 +2013,16 @@ int gameSceneMain(){
     GRRLIB_FreeTexture(mangle);
     FreeImgAnim(&foxy);
     FreeImgAnim(&chica);
+    FreeImgAnim(&error_status);
     SM_FreeAllAudio();
+    if(nextScene == 0){
+        gameoverSceneMain();
+    }
+    if(nextScene == 1){
+        next_daySceneMain();
+    }
+    if(nextScene == 2){
+        menuSceneMain();
+    }
     return 0;
 }
