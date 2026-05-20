@@ -45,8 +45,6 @@ bool hasFreddyDukedDown = false;
 bool isFreddyJumpscaring = false;
 bool canPlayLure = true;
 bool isLurePlaying = false;
-bool canMute = true;
-bool destroyedMute = false;
 bool hasPuppetSpawned = false; // change to false
 bool canPuppetSpawn = true;
 bool isPuppetAttacking = false;
@@ -108,7 +106,6 @@ GRRLIB_texImg *panelClick = NULL;
 GRRLIB_texImg *camClick = NULL;
 GRRLIB_texImg *sceneTex = NULL;
 GRRLIB_texImg *mangle = NULL;
-GRRLIB_texImg *mute = NULL;
 GRRLIB_texImg *puppet = NULL;
 GRRLIB_texImg *bb_cam = NULL;
 u8 camButton_alpha = 100;
@@ -275,7 +272,132 @@ void DrawWarpedScene(){
     }
 }
 
+void ResetGameState() {
+    // 1. Reset Camera and Coordinate Positions
+    x = 0.0f;
+    tx = 0.0f;
+    selected_cam = 2;
+    mon_cam = 0;
+    camLayoutSelection = 0; // 0 is normal, 1 is vent 
+
+    // 2. Reset Core UI & Panel Statuses
+    isControlPanelOpen = 0;
+    PanelButtonVisible = true;
+    canPanelButtonBeClicked = true;
+    canPan = true;
+    isCamOpen = false;
+    ScreenOpen = false;
+    IsCurrentlyClosingPanel = false;
+    isSealing = false;
+    isVentCamPressed = false;
+    MapLayoutNormalMode = false;
+    panelSelect = 0;
+    camButton_alpha = 100;
+    blackout_alpha = 0;
+    closed_vent = 0;
+    seal_f = 0;
+
+    // 3. Reset Game Errors & Reboot Systems
+    audioError = false;
+    videoError = false;
+    ventilationError = false;
+    isRebootingCam = false;
+    isRebootingAudio = false;
+    isRebootingVent = false;
+    isRebootingAll = false;
+    isRebooting = false;
+    
+    camHealth = 10;
+    ventHealth = 10;
+    audioHealth = 10;
+    camProgress = 0;
+    ventProgress = 0;
+    audioProgress = 0;
+    allProgress = 0;
+
+    // 4. Reset AI & Mechanics States
+    hallucinating = false;
+    stage3scare = false;
+    isJumpscare = false;
+    move_counter = 0;
+    aggresive = false;
+    action_selected = 0;
+    attack_stage = 0;
+    total_turns = 0;
+
+    // 5. Reset Phantom / Animatronic Spawns & Counters
+    IsBBJumpscaring = false;
+    hasBBSpawned = false;
+    BBSpawn = -1;
+    BBcounter = 0;
+    BBAlpha = 255;
+    BBcamLoaded = false;
+
+    hasMangleSpawned = false;
+    hasMangleJumspcared = false;
+    canMangleSpawn = true;
+    MangleCounter = 0;
+    MangleJumspcareCounter = 0;
+
+    hasFreddySpawned = false;
+    canFreddySpawn = true;
+    hasFreddyDukedDown = false;
+    isFreddyJumpscaring = false;
+    freddyCounter = 0;
+    freddyjumpscare_f = 0;
+    freddy_alpha = 255;
+
+    hasPuppetSpawned = false;
+    canPuppetSpawn = true;
+    isPuppetAttacking = false;
+    puppetLoaded = false;
+    PuppetCamCounter = 0;
+    PuppetOfficeCounter = 0;
+
+    hasChicaCamSpawned = false;
+    hasChicaOfficeSpawned = false;
+    canChicaSpawn = true;
+    isChicaJumpscaring = false;
+    chicaCounter = 0;
+
+    hasFoxySpawned = false;
+    canFoxySpawn = true;
+    isFoxyJumpscaring = false;
+    hasSeenFoxy = false;
+    foxy_chance = 0;
+    foxy_alpha = 255;
+    chica_alpha = 255;
+
+    // 6. Reset Lure & Audio Mechanics
+    canPlayLure = true;
+    isLurePlaying = false;
+    lureDelay = 0;
+
+    // 7. Reset Timers and Time System
+    time_am = 12;
+    frame = 0;
+    CamErrorTimer = 0;
+    VentErrorTimer = 0;
+    VentErrorTimer2 = 0;
+    double_click_timer_vent = 0;
+    chicaCounter = 0;
+    IdleCounter = 0;
+
+    // 8. Reset Local Animation Index Helpers
+    fan_f = 0;
+    controlPanel_f = 0;
+    CamPanel_f = 0;
+    CamLayout_f = 0;
+    freddy_f = 0;
+    foxy_f = 0;
+    chica_f = 0;
+    blip_f = 10;
+    
+    nextScene = -1;
+}
+
 void InitAllImg(){
+    ResetGameState();
     office.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/203(1).png"); // normal 1
     office.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/203(2).png"); // normal 2
     office.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/204(1).png"); // alarm 1
@@ -370,8 +492,6 @@ void InitAllImg(){
     error_status.frames[0] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/604.png");
     error_status.frames[1] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/608.png");
     error_status.frames[2] = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/610.png");
-
-    mute = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/699.png");
 
     mangle = GRRLIB_FakeLoad("sd:/fnaf3/assets/images/202.png");
     Desolate_Underworld2 = SM_LoadAudio("Desolate_Underworld2.wav");
@@ -1460,7 +1580,7 @@ void chica_calc(){
 
 int gameSceneMain(){
     char* night_text = read_line(SD_SAVE, 0);
-    if (strcmp(night_text, "NIGHT_NMB=1") == 0) NIGHT = 1;
+    if (strcmp(night_text, "NIGHT=1") == 0) NIGHT = 1;
     else if (strcmp(night_text, "NIGHT=2") == 0) NIGHT = 2;
     else if (strcmp(night_text, "NIGHT=3") == 0) NIGHT = 3;
     else if (strcmp(night_text, "NIGHT=4") == 0) NIGHT = 4;
@@ -1479,6 +1599,10 @@ int gameSceneMain(){
         mon_cam = (rand() % 5) + 6;
     }
     FILE *night_call;
+    if (night_call != NULL) {
+        fclose(night_call);
+        night_call = NULL;
+    }
     SM_PlayAudio(tablefan, 127, 127, true, false, 0);
     SM_PlayAudio(Desolate_Underworld2, 127, 127, true, false, 0);
     if(NIGHT==1){
@@ -1503,13 +1627,15 @@ int gameSceneMain(){
     //fclose(night_call);
     while (1)
     {
-        if(time_am == 6){
-            break;
-        }
         WPAD_ScanPads();
         mote = WPAD_ButtonsDown(0);
         WPAD_IR(0, &ir);
         SM_UpdateAudio();
+        if(NIGHT==1){
+            ventHealth = 10;
+            camHealth = 10;
+            audioHealth = 10;
+        }
         IR_Y = ir.y * (480.0f / 460.0f);
         if(camButton_alpha == 99 || camButton_alpha == 50 || isJumpscare == true || isControlPanelOpen == 1 || IsBBJumpscaring || isPuppetAttacking || isChicaJumpscaring || isFoxyJumpscaring){
             canPan = false;
@@ -1698,16 +1824,6 @@ int gameSceneMain(){
         if(isRebooting){
             reboot();
         }
-        if(canMute){
-            GRRLIB_DrawImg(20, 20, mute, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
-        }else{
-            if(!destroyedMute){
-                GRRLIB_FreeTexture(mute);
-                stop_sound = SM_LoadAudio("stop.wav");
-                SM_PlayAudio(stop_sound, 50, 50, false, true, 0);
-                destroyedMute = true;
-            }
-        }
         drawCamLayout();
         drawCamButton();
         if(isLurePlaying){
@@ -1824,21 +1940,14 @@ int gameSceneMain(){
                     audioHealth -= Springtrap_AI[NIGHT-1];
                 }
             }
-            if(IsCursorWithinImg(mute, 20, 20) && canMute){
-                MP3Player_Stop();
-                canMute = false;
-            }
         }
         drawPanelText();
         if(isJumpscare){
             jumpscare();
         }
-        if(!MP3Player_IsPlaying()){
-            canMute = false;
-        }
         drawNightInf();
         if(NIGHT == 1){
-            if(frame%(60*40)==0 && frame != 0){
+            if(frame%(60*40)==0 && frame != 0){ // 40
                 if(time_am == 12){
                     time_am = 1;
                 }else{time_am += 1;}
@@ -1946,7 +2055,6 @@ int gameSceneMain(){
         if(lureDelay > 0){
             lureDelay--;
         }
-        if(time_am == 6){break;}
         if(ventilationError){
             static u8 blackout_dir = 1;
             blackout_alpha += blackout_dir;
@@ -2007,7 +2115,6 @@ int gameSceneMain(){
     FreeImgAnim(&lureLoad);
     GRRLIB_FreeTexture(bb_cam);
     GRRLIB_FreeTexture(puppet);
-    GRRLIB_FreeTexture(mute);
     GRRLIB_FreeTexture(font);
     GRRLIB_FreeTexture(cursor);
     GRRLIB_FreeTexture(mangle);

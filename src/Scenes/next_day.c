@@ -47,7 +47,7 @@ int next_daySceneMain(){
     SM_FreeAllAudio();
     FreeImgAnim(&night_time);
     if(!quitMenu){
-        gameSceneMain();
+        menuSceneMain();
     }else{menuSceneMain();}
     return 0;
 }

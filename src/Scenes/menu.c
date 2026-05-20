@@ -1,7 +1,8 @@
 #include "main.h"
-
+#include "credit_png.h"
 IMG_Anim green_lines = {0};
 GRRLIB_texImg *pointer = NULL;
+GRRLIB_texImg *bsg_credits = NULL;
 ir_t ir2;
 float IR2_Y;
 
@@ -272,6 +273,7 @@ int menuSceneMain(){
     GRRLIB_texImg *cursor = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/833.png");
     GRRLIB_texImg *scott_credits = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/849.png");
     GRRLIB_texImg *game_ver = GRRLIB_LoadTextureFromFile("sd:/fnaf3/assets/images/160.png"); // original game version
+    bsg_credits = GRRLIB_LoadTexture(credit_png);
     pointer = GRRLIB_LoadTexture(pointer_png);
     u8 altA = 0;
     u8 altB = 0;
@@ -333,6 +335,7 @@ int menuSceneMain(){
         createStatic(&static_spr, &static_f);
         createGameVer(game_ver);
         drawPointer();
+        GRRLIB_DrawImg(400, 50, bsg_credits, 0, IMG_SCALE, IMG_SCALE, 0xFFFFFFFF);
         frame++;
         GRRLIB_Render();
         if(IsCursorWithinImg2(new_game, 60, 282)){cursor_f = 0;}
