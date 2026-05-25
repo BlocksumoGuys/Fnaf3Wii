@@ -22,6 +22,7 @@ void FreeImgAnim(IMG_Anim* img_a){
         GRRLIB_FreeTexture(img_a->frames[i]);
         img_a->frames[i] = NULL;
     }
+    img_a->loaded = false;
 }
 
 void FreeAllImgAnim2(IMG_Anim2* img_a){
