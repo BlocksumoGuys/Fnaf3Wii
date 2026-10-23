@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     SM_Init();
     GRRLIB_FillScreen(0x000000FF);
-    FILE *original_game = fopen("sd:/fnaf3/FiveNightsatFreddys3.exe", "r");
+    FILE *original_game = fopen("sd:/fnaf3/assets/font.png", "r");
     GRRLIB_Render();
     if(original_game){
         fclose(original_game);
