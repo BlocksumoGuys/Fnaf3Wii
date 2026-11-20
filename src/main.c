@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
     MP3Player_Init();
     SM_Init();
     GRRLIB_FillScreen(0x000000FF);
-    FILE *original_game = fopen("sd:/fnaf3/assets/font.png", "r");
+    FILE *original_game = fopen("sd:/fnaf3/assets/Images/67.png", "r"); //opsec level: relying on a single file
     GRRLIB_Render();
     if(original_game){
         fclose(original_game);
