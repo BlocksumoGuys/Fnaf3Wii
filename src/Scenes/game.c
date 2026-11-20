@@ -274,14 +274,11 @@ void DrawWarpedScene(){
 }
 
 void ResetGameState() {
-    // 1. Reset Camera and Coordinate Positions
     x = 0.0f;
     tx = 0.0f;
     selected_cam = 2;
     mon_cam = 0;
     camLayoutSelection = 0; // 0 is normal, 1 is vent 
-
-    // 2. Reset Core UI & Panel Statuses
     isControlPanelOpen = 0;
     PanelButtonVisible = true;
     canPanelButtonBeClicked = true;
@@ -297,8 +294,6 @@ void ResetGameState() {
     blackout_alpha = 0;
     closed_vent = 0;
     seal_f = 0;
-
-    // 3. Reset Game Errors & Reboot Systems
     audioError = false;
     videoError = false;
     ventilationError = false;
@@ -307,7 +302,6 @@ void ResetGameState() {
     isRebootingVent = false;
     isRebootingAll = false;
     isRebooting = false;
-    
     camHealth = 10;
     ventHealth = 10;
     audioHealth = 10;
@@ -315,8 +309,6 @@ void ResetGameState() {
     ventProgress = 0;
     audioProgress = 0;
     allProgress = 0;
-
-    // 4. Reset AI & Mechanics States
     hallucinating = false;
     stage3scare = false;
     isJumpscare = false;
@@ -325,21 +317,17 @@ void ResetGameState() {
     action_selected = 0;
     attack_stage = 0;
     total_turns = 0;
-
-    // 5. Reset Phantom / Animatronic Spawns & Counters
     IsBBJumpscaring = false;
     hasBBSpawned = false;
     BBSpawn = -1;
     BBcounter = 0;
     BBAlpha = 255;
     BBcamLoaded = false;
-
     hasMangleSpawned = false;
     hasMangleJumspcared = false;
     canMangleSpawn = true;
     MangleCounter = 0;
     MangleJumspcareCounter = 0;
-
     hasFreddySpawned = false;
     canFreddySpawn = true;
     hasFreddyDukedDown = false;
@@ -347,20 +335,17 @@ void ResetGameState() {
     freddyCounter = 0;
     freddyjumpscare_f = 0;
     freddy_alpha = 255;
-
     hasPuppetSpawned = false;
     canPuppetSpawn = true;
     isPuppetAttacking = false;
     puppetLoaded = false;
     PuppetCamCounter = 0;
     PuppetOfficeCounter = 0;
-
     hasChicaCamSpawned = false;
     hasChicaOfficeSpawned = false;
     canChicaSpawn = true;
     isChicaJumpscaring = false;
     chicaCounter = 0;
-
     hasFoxySpawned = false;
     canFoxySpawn = true;
     isFoxyJumpscaring = false;
@@ -368,13 +353,9 @@ void ResetGameState() {
     foxy_chance = 0;
     foxy_alpha = 255;
     chica_alpha = 255;
-
-    // 6. Reset Lure & Audio Mechanics
     canPlayLure = true;
     isLurePlaying = false;
     lureDelay = 0;
-
-    // 7. Reset Timers and Time System
     time_am = 12;
     frame = 0;
     CamErrorTimer = 0;
@@ -383,8 +364,6 @@ void ResetGameState() {
     double_click_timer_vent = 0;
     chicaCounter = 0;
     IdleCounter = 0;
-
-    // 8. Reset Local Animation Index Helpers
     fan_f = 0;
     controlPanel_f = 0;
     CamPanel_f = 0;
